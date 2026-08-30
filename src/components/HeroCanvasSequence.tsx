@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from "framer-motion";
+import { motion, useScroll, useTransform, useMotionValueEvent, MotionValue } from "framer-motion";
 import { ArrowDown, CornerRightDown, Sparkles } from "lucide-react";
 
 interface HeroLookFrame {
@@ -62,6 +62,55 @@ const HERO_LOOKS: HeroLookFrame[] = [
   },
 ];
 
+const HeroShotLayer = ({
+  look,
+  idx,
+  totalShots,
+  scrollYProgress,
+  scaleTransform,
+}: {
+  look: HeroLookFrame;
+  idx: number;
+  totalShots: number;
+  scrollYProgress: MotionValue<number>;
+  scaleTransform: MotionValue<number>;
+}) => {
+  const start = idx / totalShots;
+  const end = (idx + 1) / totalShots;
+  const fadeStart = start - (1 / totalShots);
+  const fadeEnd = start;
+
+  const opacityFadeIn = useTransform(scrollYProgress, [fadeStart, fadeEnd, end, end + (1 / totalShots)], [0, 1, 1, 0]);
+  const opacityFirst = useTransform(scrollYProgress, [end, end + (1 / totalShots)], [1, 0]);
+  
+  const opacity = idx === 0 ? opacityFirst : opacityFadeIn;
+  const zIndex = idx === 0 ? 1 : idx + 1;
+
+  return (
+    <motion.div
+      className="absolute inset-0 w-full h-full"
+      style={{
+        opacity,
+        zIndex,
+        pointerEvents: "none",
+      }}
+    >
+      <motion.img
+        src={look.src}
+        alt={look.title}
+        loading={idx <= 1 ? "eager" : "lazy"}
+        decoding="async"
+        className="w-full h-full object-cover"
+        style={{
+          objectPosition: look.focalY,
+          scale: scaleTransform,
+          willChange: "transform, opacity",
+        }}
+      />
+    </motion.div>
+  );
+};
+
 export default function HeroCanvasSequence() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
@@ -92,25 +141,19 @@ export default function HeroCanvasSequence() {
   };
 
   const currentLook = HERO_LOOKS[activeLookIndex] || HERO_LOOKS[0];
-
   const scaleTransform = useTransform(scrollYProgress, [0, 1], [1.0, 1.08]);
   
-  // Chapter 1
   const c1Opacity = useTransform(scrollYProgress, [0.12, 0.24], [1, 0]);
   const c1Y = useTransform(scrollYProgress, [0, 1], [0, -50]);
   
-  // Chapter 2
   const c2Opacity = useTransform(scrollYProgress, [0.20, 0.26, 0.54, 0.60], [0, 1, 1, 0]);
-  const c2X = useTransform(scrollYProgress, [0.26, 0.60], [8.4, -15.4]); // roughly matching previous motion
+  const c2X = useTransform(scrollYProgress, [0.26, 0.60], [8.4, -15.4]);
   
-  // Chapter 3
   const c3Opacity = useTransform(scrollYProgress, [0.48, 0.54, 0.78, 0.84], [0, 1, 1, 0]);
   
-  // Chapter 4
   const c4Opacity = useTransform(scrollYProgress, [0.76, 0.9], [0, 1]);
   const c4Y = useTransform(scrollYProgress, [0.76, 1], [7.2, 0]);
 
-  // Progress Bar
   const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
 
   return (
@@ -121,45 +164,16 @@ export default function HeroCanvasSequence() {
     >
       <div className="sticky top-0 left-0 w-full h-screen overflow-hidden select-none bg-black">
         <div className="absolute inset-0 w-full h-full">
-          {HERO_LOOKS.map((look, idx) => {
-            const start = idx / HERO_LOOKS.length;
-            const end = (idx + 1) / HERO_LOOKS.length;
-            const fadeStart = start - (1 / HERO_LOOKS.length);
-            const fadeEnd = start;
-
-            // First image starts at opacity 1, others fade in
-            const opacity = idx === 0 
-              ? useTransform(scrollYProgress, [end, end + (1 / HERO_LOOKS.length)], [1, 0])
-              : useTransform(scrollYProgress, [fadeStart, fadeEnd, end, end + (1 / HERO_LOOKS.length)], [0, 1, 1, 0]);
-
-            const zIndex = idx === 0 ? 1 : idx + 1;
-
-            return (
-              <motion.div
-                key={`hero-bg-${look.id}`}
-                className="absolute inset-0 w-full h-full"
-                style={{
-                  opacity,
-                  zIndex,
-                  pointerEvents: "none",
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <motion.img
-                  src={look.src}
-                  alt={look.title}
-                  loading={idx <= 1 ? "eager" : "lazy"}
-                  decoding="async"
-                  className="w-full h-full object-cover"
-                  style={{
-                    objectPosition: look.focalY,
-                    scale: scaleTransform,
-                    willChange: "transform, opacity",
-                  }}
-                />
-              </motion.div>
-            );
-          })}
+          {HERO_LOOKS.map((look, idx) => (
+            <HeroShotLayer 
+              key={`hero-bg-${look.id}`}
+              look={look}
+              idx={idx}
+              totalShots={HERO_LOOKS.length}
+              scrollYProgress={scrollYProgress}
+              scaleTransform={scaleTransform}
+            />
+          ))}
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/75 pointer-events-none z-10" />

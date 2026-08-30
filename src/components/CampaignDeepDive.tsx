@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
 const CAMPAIGN_SHOTS = [
@@ -23,6 +23,54 @@ const CAMPAIGN_SHOTS = [
   },
 ];
 
+const CampaignShotLayer = ({
+  shot,
+  idx,
+  totalShots,
+  scrollYProgress,
+  scale,
+}: {
+  shot: any;
+  idx: number;
+  totalShots: number;
+  scrollYProgress: MotionValue<number>;
+  scale: MotionValue<number>;
+}) => {
+  const start = idx / totalShots;
+  const end = (idx + 1) / totalShots;
+  const fadeStart = start - (1 / totalShots);
+  const fadeEnd = start;
+
+  const opacityFadeIn = useTransform(scrollYProgress, [fadeStart, fadeEnd, end, end + (1 / totalShots)], [0, 1, 1, 0]);
+  const opacityFirst = useTransform(scrollYProgress, [end, end + (1 / totalShots)], [1, 0]);
+  
+  const opacity = idx === 0 ? opacityFirst : opacityFadeIn;
+  const zIndex = idx === 0 ? 1 : idx + 1;
+
+  return (
+    <motion.div
+      className="absolute inset-0 w-full h-full"
+      style={{
+        opacity,
+        zIndex,
+        pointerEvents: "none",
+      }}
+    >
+      <motion.img
+        src={shot.src}
+        alt={shot.title}
+        loading="lazy"
+        decoding="async"
+        className="w-full h-full object-cover"
+        style={{
+          scale,
+          willChange: "transform, opacity",
+        }}
+      />
+    </motion.div>
+  );
+};
+
 export default function CampaignDeepDive() {
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -33,12 +81,6 @@ export default function CampaignDeepDive() {
 
   const scale = useTransform(scrollYProgress, [0, 1], [1.0, 1.06]);
   
-  const detail1Visible = useTransform(scrollYProgress, (v) => v >= 0.10 && v <= 0.42);
-  const detail2Visible = useTransform(scrollYProgress, (v) => v >= 0.38 && v <= 0.70);
-  const detail3Visible = useTransform(scrollYProgress, (v) => v >= 0.65 && v <= 0.98);
-
-  // Since we cannot use AnimatePresence effectively when visibility is a MotionValue boolean,
-  // we can map opacity directly instead of using conditional rendering.
   const d1Opacity = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [0, 1, 1, 0]);
   const d1Y = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [20, 0, 0, -20]);
   const d1Scale = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [0.95, 1, 1, 0.95]);
@@ -65,43 +107,16 @@ export default function CampaignDeepDive() {
     >
       <div className="sticky top-0 left-0 w-full h-screen overflow-hidden select-none bg-black">
         <div className="absolute inset-0 w-full h-full">
-          {CAMPAIGN_SHOTS.map((shot, idx) => {
-            const start = idx / CAMPAIGN_SHOTS.length;
-            const end = (idx + 1) / CAMPAIGN_SHOTS.length;
-            const fadeStart = start - (1 / CAMPAIGN_SHOTS.length);
-            const fadeEnd = start;
-
-            const opacity = idx === 0 
-              ? useTransform(scrollYProgress, [end, end + (1 / CAMPAIGN_SHOTS.length)], [1, 0])
-              : useTransform(scrollYProgress, [fadeStart, fadeEnd, end, end + (1 / CAMPAIGN_SHOTS.length)], [0, 1, 1, 0]);
-
-            const zIndex = idx === 0 ? 1 : idx + 1;
-
-            return (
-              <motion.div
-                key={`campaign-shot-${idx}`}
-                className="absolute inset-0 w-full h-full"
-                style={{
-                  opacity,
-                  zIndex,
-                  pointerEvents: "none",
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <motion.img
-                  src={shot.src}
-                  alt={shot.title}
-                  loading="lazy"
-                  decoding="async"
-                  className="w-full h-full object-cover"
-                  style={{
-                    scale,
-                    willChange: "transform, opacity",
-                  }}
-                />
-              </motion.div>
-            );
-          })}
+          {CAMPAIGN_SHOTS.map((shot, idx) => (
+            <CampaignShotLayer 
+              key={`campaign-shot-${idx}`}
+              shot={shot}
+              idx={idx}
+              totalShots={CAMPAIGN_SHOTS.length}
+              scrollYProgress={scrollYProgress}
+              scale={scale}
+            />
+          ))}
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-black/75 pointer-events-none z-10" />
