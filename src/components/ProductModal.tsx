@@ -57,6 +57,7 @@ export default function ProductModal() {
 
           {/* Modal Content Box */}
           <motion.div
+            layoutId={`product-container-${product.id}`}
             key="product-modal-container"
             initial={{ opacity: 0, scale: 0.94, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -83,6 +84,7 @@ export default function ProductModal() {
               <AnimatePresence mode="wait">
                 <motion.img
                   key={`product-modal-image-${activeImageIndex}-${product.id || 'p'}`}
+                  layoutId={activeImageIndex === 0 ? `product-image-${product.id}` : undefined}
                   src={images[activeImageIndex]}
                   alt={product.name}
                   initial={{ opacity: 0, scale: 1.04 }}

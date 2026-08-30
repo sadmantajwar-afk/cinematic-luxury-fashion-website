@@ -37,6 +37,7 @@ export default function ProductCard({ product, onSelect }: ProductCardProps) {
 
   return (
     <motion.div
+      layoutId={`product-container-${product.id}`}
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -80,8 +81,8 @@ export default function ProductCard({ product, onSelect }: ProductCardProps) {
       {/* Editorial Image Container (3:4 aspect ratio) */}
       <div className="relative w-full aspect-[3/4] overflow-hidden bg-neutral-950 gpu-accel">
         {/* Primary Image */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <motion.img
+          layoutId={`product-image-${product.id}`}
           src={product.primaryImage}
           alt={product.name}
           className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out ${
@@ -92,8 +93,7 @@ export default function ProductCard({ product, onSelect }: ProductCardProps) {
         />
 
         {/* Secondary Image (Crossfade on Hover) */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <motion.img
           src={product.secondaryImage}
           alt={`${product.name} alternate view`}
           className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out ${
