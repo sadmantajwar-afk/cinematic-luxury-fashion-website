@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useTransform, useMotionValueEvent, MotionValue } from "framer-motion";
+import React, { useRef, useState } from "react";
+import { useScroll, useTransform, useMotionValueEvent, MotionValue } from "framer-motion";
 import { ArrowDown, CornerRightDown, Sparkles } from "lucide-react";
 
 interface HeroLookFrame {
@@ -89,7 +89,6 @@ const HeroShotLayer = ({
   const opacityValue = idx === 0 ? opacityFirst : opacityFadeIn;
   const zIndex = idx === 0 ? 1 : idx + 1;
 
-  // Manually apply to avoid iOS Safari WAAPI TypeError bugs with motion.div
   useMotionValueEvent(opacityValue, "change", (latest) => {
     if (containerRef.current) {
       containerRef.current.style.opacity = latest.toString();
@@ -107,7 +106,7 @@ const HeroShotLayer = ({
       ref={containerRef}
       className="absolute inset-0 w-full h-full"
       style={{
-        opacity: opacityValue.get(),
+        opacity: idx === 0 ? 1 : 0, // Initial state
         zIndex,
         pointerEvents: "none",
       }}
@@ -122,7 +121,6 @@ const HeroShotLayer = ({
         className="w-full h-full object-cover"
         style={{
           objectPosition: look.focalY,
-          transform: `scale(${scaleTransform.get()})`,
           willChange: "transform, opacity",
         }}
       />
@@ -174,6 +172,34 @@ export default function HeroCanvasSequence() {
   const c4Y = useTransform(scrollYProgress, [0.76, 1], [7.2, 0]);
 
   const progressWidth = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
+  const c1Ref = useRef<HTMLDivElement>(null);
+  const c2Ref = useRef<HTMLDivElement>(null);
+  const c3Ref = useRef<HTMLDivElement>(null);
+  const c4Ref = useRef<HTMLDivElement>(null);
+  const progressRef = useRef<HTMLDivElement>(null);
+
+  // Manual DOM updates bypass buggy Safari WAAPI entirely
+  useMotionValueEvent(scrollYProgress, "change", () => {
+    if (c1Ref.current) {
+      c1Ref.current.style.opacity = c1Opacity.get().toString();
+      c1Ref.current.style.transform = `translateY(${c1Y.get()}px)`;
+    }
+    if (c2Ref.current) {
+      c2Ref.current.style.opacity = c2Opacity.get().toString();
+      c2Ref.current.style.transform = `translateX(${c2X.get()}px)`;
+    }
+    if (c3Ref.current) {
+      c3Ref.current.style.opacity = c3Opacity.get().toString();
+    }
+    if (c4Ref.current) {
+      c4Ref.current.style.opacity = c4Opacity.get().toString();
+      c4Ref.current.style.transform = `translateY(${c4Y.get()}px)`;
+    }
+    if (progressRef.current) {
+      progressRef.current.style.width = progressWidth.get();
+    }
+  });
 
   return (
     <section
@@ -231,19 +257,18 @@ export default function HeroCanvasSequence() {
         </div>
 
         <div className="absolute bottom-0 left-0 w-full h-[2px] bg-neutral-900 z-20">
-          <motion.div
+          <div
+            ref={progressRef}
             className="h-full bg-white"
-            style={{ width: progressWidth }}
+            style={{ width: "0%" }}
           />
         </div>
 
         {/* CHAPTER 1 */}
-        <motion.div
+        <div
+          ref={c1Ref}
           className="absolute inset-0 z-20 flex flex-col justify-between p-5 sm:p-10 md:p-14 pointer-events-none"
-          style={{
-            opacity: c1Opacity,
-            y: c1Y,
-          }}
+          style={{ opacity: 1, transform: "translateY(0px)" }}
         >
           <div className="mt-12 sm:mt-14 flex items-center justify-between">
             <span className="px-3 py-1 sm:px-3.5 sm:py-1.5 bg-emerald-950/90 border border-emerald-700 text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.25em] uppercase text-emerald-300 font-mono font-bold backdrop-blur-md">
@@ -275,19 +300,15 @@ export default function HeroCanvasSequence() {
               <ArrowDown size={16} />
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* CHAPTER 2 */}
-        <motion.div
+        <div
+          ref={c2Ref}
           className="absolute inset-0 z-20 flex flex-col justify-center px-5 sm:px-10 md:px-16 pointer-events-none"
-          style={{
-            opacity: c2Opacity,
-          }}
+          style={{ opacity: 0 }}
         >
-          <motion.div
-            className="max-w-4xl"
-            style={{ x: c2X }}
-          >
+          <div className="max-w-4xl">
             <div className="inline-flex items-center gap-2 mb-3 sm:mb-4 px-3 py-1 sm:px-3.5 sm:py-1.5 bg-white text-black text-[10px] sm:text-xs md:text-sm font-black uppercase tracking-[0.2em]">
               <Sparkles size={12} />
               <span>NEW CAPSULE // 8-WALE CORDUROY</span>
@@ -310,15 +331,14 @@ export default function HeroCanvasSequence() {
                 LINING: BEMBERG CUPRO
               </span>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
         {/* CHAPTER 3 */}
-        <motion.div
+        <div
+          ref={c3Ref}
           className="absolute inset-0 z-20 flex flex-col justify-center items-end px-5 sm:px-10 md:px-16 pointer-events-none text-right"
-          style={{
-            opacity: c3Opacity,
-          }}
+          style={{ opacity: 0 }}
         >
           <div className="max-w-2xl sm:max-w-3xl">
             <div className="inline-flex items-center gap-2 mb-3 sm:mb-4 px-3 py-1 sm:px-3.5 sm:py-1.5 border-2 border-white bg-black/70 backdrop-blur-md text-white text-[10px] sm:text-xs font-black uppercase tracking-[0.2em]">
@@ -337,15 +357,13 @@ export default function HeroCanvasSequence() {
               <span>CRAFT: HAND-ASSEMBLED DHAKA ATELIER, BD</span>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* CHAPTER 4 */}
-        <motion.div
+        <div
+          ref={c4Ref}
           className="absolute inset-0 z-20 flex flex-col justify-end p-5 sm:p-10 md:p-16 pointer-events-auto"
-          style={{
-            opacity: c4Opacity,
-            y: c4Y,
-          }}
+          style={{ opacity: 0 }}
         >
           <div className="max-w-4xl">
             <div className="text-[10px] sm:text-xs font-mono uppercase tracking-[0.25em] text-emerald-400 mb-2 sm:mb-3 font-bold">
@@ -373,7 +391,7 @@ export default function HeroCanvasSequence() {
               </button>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
