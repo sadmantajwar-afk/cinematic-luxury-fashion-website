@@ -22,6 +22,11 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -179,7 +184,7 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
             <span className="text-[11px] font-mono tracking-wider hidden md:inline">
               WISHLIST
             </span>
-            {wishlist.length > 0 && (
+            {mounted && wishlist.length > 0 && (
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -199,7 +204,7 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
             className="px-3 py-1.5 bg-white text-black font-mono font-bold text-[11px] uppercase tracking-wider hover:bg-neutral-200 transition-colors cursor-pointer flex items-center gap-2"
           >
             <ShoppingBag size={14} />
-            <span>BAG [{cartCount}]</span>
+            <span>BAG [{mounted ? cartCount : 0}]</span>
           </motion.button>
 
           {/* Mobile Hamburger Toggle */}
