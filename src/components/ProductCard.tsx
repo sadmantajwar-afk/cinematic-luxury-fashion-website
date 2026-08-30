@@ -106,34 +106,22 @@ export default function ProductCard({ product, onSelect }: ProductCardProps) {
         {/* Subtle Vignette & Grain */}
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/80 via-transparent to-black/20" />
 
-        {/* Quick Add Size Bar (Always visible on mobile, reveals on hover on desktop) */}
+        {/* Quick Add Overlay (Always visible on mobile, reveals on hover on desktop) */}
         <div
-          onClick={(e) => e.stopPropagation()}
           className={`absolute bottom-0 left-0 w-full p-3.5 bg-black/90 backdrop-blur-md border-t border-neutral-800 transition-all duration-300 flex flex-col gap-2 opacity-100 translate-y-0 lg:opacity-0 lg:translate-y-2 lg:pointer-events-none ${
             isHovered ? "lg:opacity-100 lg:translate-y-0 lg:pointer-events-auto" : ""
           }`}
         >
-          <div className="flex items-center justify-between text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-neutral-300 font-bold">
-            <span>QUICK ADD SIZE:</span>
-            {justAdded && (
-              <span className="text-white font-black flex items-center gap-1">
-                <Check size={12} /> ADDED TO BAG
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {sizes.map((sz, idx) => (
-              <motion.button
-                key={`card-size-${product.id || product.slug || 'p'}-${sz || idx}-${idx}`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={(e) => handleQuickAdd(e, sz)}
-                className="flex-1 py-2 px-2 text-xs font-mono font-bold uppercase tracking-wider border border-neutral-700 bg-neutral-900 hover:bg-white hover:text-black hover:border-white transition-colors cursor-pointer text-center"
-              >
-                {sz}
-              </motion.button>
-            ))}
-          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(product);
+            }}
+            className="w-full py-2.5 px-2 text-xs font-mono font-bold uppercase tracking-widest border border-neutral-700 bg-white text-black hover:bg-neutral-200 transition-colors cursor-pointer text-center flex items-center justify-center gap-2"
+          >
+            <span>QUICK VIEW / ADD</span>
+            <Plus size={14} />
+          </button>
         </div>
       </div>
 
