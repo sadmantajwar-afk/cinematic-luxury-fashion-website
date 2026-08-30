@@ -224,11 +224,11 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
         {isMobileMenuOpen && (
           <motion.div
             key="navbar-mobile-drawer"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="lg:hidden fixed inset-0 top-[60px] bg-black/95 backdrop-blur-xl border-t border-neutral-900 flex flex-col justify-between p-8 z-50 overflow-hidden"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="lg:hidden fixed inset-0 top-[60px] bg-black/95 backdrop-blur-xl border-t border-neutral-900 flex flex-col justify-between p-8 z-50 overflow-y-auto"
           >
             <nav className="space-y-6 pt-6 text-xl font-bold uppercase tracking-tight text-white">
               <button
