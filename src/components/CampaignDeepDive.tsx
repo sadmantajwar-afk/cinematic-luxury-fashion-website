@@ -5,62 +5,29 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
 const CAMPAIGN_SHOTS = [
-  "/products/corduroy_utility_jacket_01.jpg",
-  "/products/corduroy_utility_jacket_02.jpg",
-  "/products/corduroy_utility_jacket_03.jpg",
-  "/products/greenvel_luxe.jpg",
+  {
+    src: "/products/corduroy_utility_jacket_01.jpg",
+    title: "TACTILE 8-WALE CORDUROY",
+  },
+  {
+    src: "/products/corduroy_utility_jacket_02.jpg",
+    title: "MACRO HORN HARDWARE & CUFF RIBS",
+  },
+  {
+    src: "/products/corduroy_utility_jacket_03.jpg",
+    title: "DUAL FLAP GUSSET POCKETS",
+  },
+  {
+    src: "/products/greenvel_luxe.jpg",
+    title: "EMERALD SUEDE VELVET & GOLD ZARDOSI",
+  },
 ];
 
 export default function CampaignDeepDive() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  const imagesRef = useRef<HTMLImageElement[]>([]);
-  const targetProgressRef = useRef(0);
-  const currentProgressRef = useRef(0);
-  const rafIdRef = useRef<number | null>(null);
-  const isVisibleRef = useRef(false);
-  const dimensionsRef = useRef({ width: 0, height: 0, dpr: 1 });
-
-  // 1. Preload campaign imagery asynchronously
-  useEffect(() => {
-    let mounted = true;
-    const imgs: HTMLImageElement[] = [];
-
-    CAMPAIGN_SHOTS.forEach((src) => {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.decoding = "async";
-      img.src = src;
-      if (typeof img.decode === "function") {
-        img.decode().catch(() => {});
-      }
-      imgs.push(img);
-    });
-
-    imagesRef.current = imgs;
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // 2. Viewport visibility observer to save mobile battery and GPU when off-screen
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isVisibleRef.current = entry.isIntersecting;
-      },
-      { threshold: 0.01 }
-    );
-
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  // 3. Track scroll inside campaign container
+  // Track scroll inside campaign container
   useEffect(() => {
     let ticking = false;
 
@@ -80,7 +47,6 @@ export default function CampaignDeepDive() {
           const currentScroll = Math.max(0, -rect.top);
           const progress = Math.min(1, Math.max(0, currentScroll / totalScrollable));
           setScrollProgress(progress);
-          targetProgressRef.current = progress;
           ticking = false;
         });
         ticking = true;
@@ -93,133 +59,68 @@ export default function CampaignDeepDive() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 4. Smooth 60 FPS Render Loop for Canvas
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { alpha: false });
-    if (!ctx) return;
-
-    let active = true;
-
-    const loop = () => {
-      if (!active) return;
-
-      if (!isVisibleRef.current) {
-        rafIdRef.current = requestAnimationFrame(loop);
-        return;
-      }
-
-      const target = targetProgressRef.current;
-      const current = currentProgressRef.current;
-      const next = current + (target - current) * 0.15;
-      currentProgressRef.current = next;
-
-      const isMobile = window.innerWidth < 768;
-      const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-
-      const last = dimensionsRef.current;
-      if (
-        Math.abs(last.width - w) > 10 ||
-        Math.abs(last.height - h) > 80 ||
-        last.dpr !== dpr
-      ) {
-        canvas.width = Math.floor(w * dpr);
-        canvas.height = Math.floor(h * dpr);
-        dimensionsRef.current = { width: w, height: h, dpr };
-      }
-
-      ctx.save();
-      ctx.scale(dpr, dpr);
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, w, h);
-
-      // Multi-shot crossfade
-      const totalShots = CAMPAIGN_SHOTS.length - 1;
-      const scaled = next * totalShots;
-      const fromIdx = Math.min(totalShots, Math.floor(scaled));
-      const toIdx = Math.min(totalShots, fromIdx + 1);
-      const blend = scaled - fromIdx;
-
-      const drawFrame = (img: HTMLImageElement | undefined, alpha: number) => {
-        if (!img || !img.complete || img.naturalWidth === 0 || alpha <= 0.001) return;
-
-        const imgRatio = img.naturalWidth / img.naturalHeight;
-        const screenRatio = w / h;
-
-        let drawW = w;
-        let drawH = h;
-        let offX = 0;
-        let offY = 0;
-
-        if (screenRatio > imgRatio) {
-          drawW = w;
-          drawH = w / imgRatio;
-          offY = (h - drawH) / 2;
-        } else {
-          drawH = h;
-          drawW = h * imgRatio;
-          offX = (w - drawW) / 2;
-        }
-
-        const zoom = 1.0 + next * 0.05;
-        const zw = drawW * zoom;
-        const zh = drawH * zoom;
-        const zx = offX - (zw - drawW) / 2;
-        const zy = offY - (zh - drawH) / 2;
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-        ctx.drawImage(img, zx, zy, zw, zh);
-        ctx.restore();
-      };
-
-      const fromImg = imagesRef.current[fromIdx];
-      const toImg = imagesRef.current[toIdx];
-
-      if (fromImg) drawFrame(fromImg, 1 - (fromIdx === toIdx ? 0 : blend));
-      if (toImg && fromIdx !== toIdx) drawFrame(toImg, blend);
-
-      // Dark editorial monochrome overlay gradient
-      const grad = ctx.createLinearGradient(0, 0, w, 0);
-      grad.addColorStop(0, "rgba(0,0,0,0.88)");
-      grad.addColorStop(0.35, "rgba(0,0,0,0.45)");
-      grad.addColorStop(0.7, "rgba(0,0,0,0.15)");
-      grad.addColorStop(1, "rgba(0,0,0,0.7)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
-
-      ctx.restore();
-
-      rafIdRef.current = requestAnimationFrame(loop);
-    };
-
-    rafIdRef.current = requestAnimationFrame(loop);
-
-    return () => {
-      active = false;
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-    };
-  }, []);
+  // Multi-shot crossfade index calculation
+  const totalShots = CAMPAIGN_SHOTS.length - 1;
+  const scaled = scrollProgress * totalShots;
+  const fromIdx = Math.min(totalShots, Math.floor(scaled));
+  const toIdx = Math.min(totalShots, fromIdx + 1);
+  const blend = scaled - fromIdx;
 
   // Progressive detail triggers
-  const detail1Visible = scrollProgress >= 0.12 && scrollProgress <= 0.42;
-  const detail2Visible = scrollProgress >= 0.38 && scrollProgress <= 0.68;
-  const detail3Visible = scrollProgress >= 0.64 && scrollProgress <= 0.95;
+  const detail1Visible = scrollProgress >= 0.10 && scrollProgress <= 0.42;
+  const detail2Visible = scrollProgress >= 0.38 && scrollProgress <= 0.70;
+  const detail3Visible = scrollProgress >= 0.65 && scrollProgress <= 0.98;
 
   return (
     <section
       id="campaign-section"
       ref={containerRef}
       className="relative w-full bg-black text-white"
-      style={{ height: "280vh" }}
+      style={{ height: "260vh" }}
     >
       {/* Pinned full-screen container with hardware acceleration */}
-      <div className="sticky top-0 left-0 w-full h-screen overflow-hidden select-none gpu-accel">
-        {/* Sequence canvas */}
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full object-cover block" />
+      <div className="sticky top-0 left-0 w-full h-screen overflow-hidden select-none bg-black">
+        {/* Layered Hardware-Accelerated Campaign Image Shots */}
+        <div className="absolute inset-0 w-full h-full">
+          {CAMPAIGN_SHOTS.map((shot, idx) => {
+            let opacity = 0;
+            if (idx === fromIdx) {
+              opacity = 1 - (fromIdx === toIdx ? 0 : blend);
+            } else if (idx === toIdx) {
+              opacity = blend;
+            }
+
+            const scale = 1.0 + (scrollProgress * 0.06);
+
+            return (
+              <div
+                key={`campaign-shot-${idx}`}
+                className="absolute inset-0 w-full h-full transition-opacity duration-150 ease-out"
+                style={{
+                  opacity: opacity,
+                  zIndex: idx === fromIdx ? 1 : idx === toIdx ? 2 : 0,
+                  pointerEvents: "none",
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={shot.src}
+                  alt={shot.title}
+                  loading="lazy"
+                  decoding="async"
+                  className="w-full h-full object-cover transition-transform duration-300 ease-out"
+                  style={{
+                    transform: `scale(${scale})`,
+                    willChange: "transform, opacity",
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Dark Editorial Overlay Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-black/75 pointer-events-none z-10" />
 
         {/* Grain overlay */}
         <div className="absolute inset-0 pointer-events-none grain-overlay z-10" />

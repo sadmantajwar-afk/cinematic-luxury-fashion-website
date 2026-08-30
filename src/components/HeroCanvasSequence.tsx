@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowDown, CornerRightDown, Sparkles } from "lucide-react";
-import { useShop } from "@/context/ShopContext";
 
 interface HeroLookFrame {
   id: string;
@@ -10,9 +10,7 @@ interface HeroLookFrame {
   subtitle: string;
   collection: string;
   src: string;
-  focalY: number; // 0.0 (top) to 1.0 (bottom)
-  zoomRange: [number, number]; // [minZoom, maxZoom]
-  accentColor: string;
+  focalY: string;
   lookTag: string;
 }
 
@@ -24,9 +22,7 @@ const HERO_LOOKS: HeroLookFrame[] = [
     subtitle: "Emerald green suede velvet jacket with hand-finished gold zardosi embroidery lining the collar.",
     collection: "OVERFLOW OF WARMTH ’25 // LUXURY MINIMALISM",
     src: "/products/greenvel_luxe.jpg",
-    focalY: 0.28,
-    zoomRange: [1.0, 1.12],
-    accentColor: "#16382c",
+    focalY: "center 28%",
     lookTag: "LOOK 01 // OVERFLOW OF WARMTH",
   },
   {
@@ -35,9 +31,7 @@ const HERO_LOOKS: HeroLookFrame[] = [
     subtitle: "Heavyweight 8-wale tactile cotton corduroy jacket engineered with structured drop shoulders and camp spread collar.",
     collection: "AUTUMN / WINTER ’26 ARCHITECTURAL CAPSULE",
     src: "/products/corduroy_utility_jacket_01.jpg",
-    focalY: 0.30,
-    zoomRange: [1.0, 1.10],
-    accentColor: "#1d2d44",
+    focalY: "center 30%",
     lookTag: "LOOK 02 // UTILITY EDIT",
   },
   {
@@ -46,9 +40,7 @@ const HERO_LOOKS: HeroLookFrame[] = [
     subtitle: "Macro inspection of the contrast-direction ribbed cuff bands and custom dyed horn buttons crafted in Dhaka.",
     collection: "CRAFT FOCUS // DHAKA ATELIER, BANGLADESH",
     src: "/products/corduroy_utility_jacket_02.jpg",
-    focalY: 0.55,
-    zoomRange: [1.02, 1.14],
-    accentColor: "#0d1b2a",
+    focalY: "center 55%",
     lookTag: "DETAIL // MACRO HORN HARDWARE",
   },
   {
@@ -57,9 +49,7 @@ const HERO_LOOKS: HeroLookFrame[] = [
     subtitle: "Deep dual flap utility cargo pockets with reinforced double-needle basting and clean concealed construction.",
     collection: "PROPORTION STUDY // 8-WALE TEXTURE",
     src: "/products/corduroy_utility_jacket_03.jpg",
-    focalY: 0.60,
-    zoomRange: [1.0, 1.12],
-    accentColor: "#1b263b",
+    focalY: "center 60%",
     lookTag: "DETAIL // DUAL FLAP CARGO",
   },
   {
@@ -68,67 +58,17 @@ const HERO_LOOKS: HeroLookFrame[] = [
     subtitle: "Architectural double-breasted overcoat cut in 640 GSM pure virgin wool gabardine with exaggerated drop shoulders.",
     collection: "RUNWAY EDIT 01 // OBSIDIAN NOIR",
     src: "https://images.pexels.com/photos/18255304/pexels-photo-18255304.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1600&w=1200",
-    focalY: 0.35,
-    zoomRange: [1.0, 1.09],
-    accentColor: "#212529",
+    focalY: "center 35%",
     lookTag: "LOOK 03 // OBSIDIAN",
   },
 ];
 
 export default function HeroCanvasSequence() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeLookIndex, setActiveLookIndex] = useState(0);
 
-  const imagesRef = useRef<HTMLImageElement[]>([]);
-  const scrollProgressRef = useRef(0);
-  const targetProgressRef = useRef(0);
-  const rafIdRef = useRef<number | null>(null);
-  const isHeroVisibleRef = useRef(true);
-
-  // Cached dimensions to prevent canvas rebuild on mobile address bar scroll
-  const canvasDimensionsRef = useRef({ width: 0, height: 0, dpr: 1 });
-
-  // 1. Preload real high-fashion imagery
-  useEffect(() => {
-    let isMounted = true;
-    const loadedImages: HTMLImageElement[] = [];
-
-    HERO_LOOKS.forEach((look, idx) => {
-      const img = new Image();
-      img.decoding = "async";
-      img.src = look.src;
-      loadedImages[idx] = img;
-
-      if (typeof img.decode === "function") {
-        img.decode().catch(() => {});
-      }
-    });
-
-    imagesRef.current = loadedImages;
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  // 2. Viewport visibility observer to halt canvas loop when off-screen on phones
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        isHeroVisibleRef.current = entry.isIntersecting;
-      },
-      { threshold: 0.01 }
-    );
-
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  // 3. Passive scroll listener with smooth progress calculation
+  // Smooth scroll listener
   useEffect(() => {
     let ticking = false;
 
@@ -145,7 +85,6 @@ export default function HeroCanvasSequence() {
           const currentScroll = Math.max(0, -rect.top);
           const rawProgress = Math.min(1, Math.max(0, currentScroll / totalScrollable));
 
-          targetProgressRef.current = rawProgress;
           setScrollProgress(rawProgress);
 
           const segmentIndex = Math.min(
@@ -163,156 +102,6 @@ export default function HeroCanvasSequence() {
     handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // 4. 60 FPS Mobile-Optimized Render Loop with dampened lerp
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { alpha: false });
-    if (!ctx) return;
-
-    let running = true;
-
-    const render = () => {
-      if (!running) return;
-
-      // If off-screen, skip render work to save phone battery & GPU
-      if (!isHeroVisibleRef.current) {
-        rafIdRef.current = requestAnimationFrame(render);
-        return;
-      }
-
-      // Smooth progress lerp
-      const target = targetProgressRef.current;
-      const current = scrollProgressRef.current;
-      const lerpSpeed = 0.14;
-      const nextProgress = current + (target - current) * lerpSpeed;
-      scrollProgressRef.current = nextProgress;
-
-      const isMobile = window.innerWidth < 768;
-      const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-
-      // Only resize canvas if dimensions change significantly (avoids mobile address bar bounce)
-      const last = canvasDimensionsRef.current;
-      if (
-        Math.abs(last.width - width) > 10 ||
-        Math.abs(last.height - height) > 80 ||
-        last.dpr !== dpr
-      ) {
-        canvas.width = Math.floor(width * dpr);
-        canvas.height = Math.floor(height * dpr);
-        canvasDimensionsRef.current = { width, height, dpr };
-      }
-
-      ctx.save();
-      ctx.scale(dpr, dpr);
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, width, height);
-
-      // Multi-image continuous scroll crossfade calculations
-      const totalSegments = HERO_LOOKS.length - 1;
-      const scaledProgress = nextProgress * totalSegments;
-      const fromIndex = Math.min(totalSegments, Math.floor(scaledProgress));
-      const toIndex = Math.min(totalSegments, fromIndex + 1);
-      const blend = scaledProgress - fromIndex; // 0.0 to 1.0
-
-      const drawLookImage = (
-        img: HTMLImageElement | undefined,
-        look: HeroLookFrame,
-        alpha: number,
-        localProgress: number
-      ) => {
-        if (!img || !img.complete || img.naturalWidth === 0 || alpha <= 0.001) return;
-
-        const imgRatio = img.naturalWidth / img.naturalHeight;
-        const screenRatio = width / height;
-
-        let drawW = width;
-        let drawH = height;
-        let offsetX = 0;
-        let offsetY = 0;
-
-        if (screenRatio > imgRatio) {
-          drawW = width;
-          drawH = width / imgRatio;
-          offsetY = (height - drawH) * look.focalY;
-        } else {
-          drawH = height;
-          drawW = height * imgRatio;
-          offsetX = (width - drawW) / 2;
-        }
-
-        // Camera push-in along the scroll
-        const [minZoom, maxZoom] = look.zoomRange;
-        const zoom = minZoom + (maxZoom - minZoom) * localProgress;
-        const zoomedW = drawW * zoom;
-        const zoomedH = drawH * zoom;
-        const zoomedX = offsetX - (zoomedW - drawW) / 2;
-        const zoomedY = offsetY - (zoomedH - drawH) * look.focalY;
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-        ctx.drawImage(img, zoomedX, zoomedY, zoomedW, zoomedH);
-        ctx.restore();
-      };
-
-      const fromImg = imagesRef.current[fromIndex];
-      const toImg = imagesRef.current[toIndex];
-      const fromLook = HERO_LOOKS[fromIndex];
-      const toLook = HERO_LOOKS[toIndex];
-
-      // Draw base image
-      if (fromImg && fromLook) {
-        drawLookImage(fromImg, fromLook, 1 - (fromIndex === toIndex ? 0 : blend), blend);
-      }
-
-      // Draw incoming crossfade image
-      if (toImg && toLook && fromIndex !== toIndex) {
-        drawLookImage(toImg, toLook, blend, blend);
-      }
-
-      // High-Fashion Atmospheric Vignette & Contrast Overlay
-      const gradient = ctx.createRadialGradient(
-        width / 2,
-        height / 2,
-        Math.min(width, height) * 0.25,
-        width / 2,
-        height / 2,
-        Math.max(width, height) * 0.78
-      );
-      gradient.addColorStop(0, "rgba(0, 0, 0, 0.05)");
-      gradient.addColorStop(0.65, "rgba(0, 0, 0, 0.40)");
-      gradient.addColorStop(1, "rgba(0, 0, 0, 0.85)");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-
-      // Top & Bottom Atmospheric Gradients
-      const topGrad = ctx.createLinearGradient(0, 0, 0, 160);
-      topGrad.addColorStop(0, "rgba(0, 0, 0, 0.9)");
-      topGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      ctx.fillStyle = topGrad;
-      ctx.fillRect(0, 0, width, 160);
-
-      const bottomGrad = ctx.createLinearGradient(0, height - 180, 0, height);
-      bottomGrad.addColorStop(0, "rgba(0, 0, 0, 0)");
-      bottomGrad.addColorStop(1, "rgba(0, 0, 0, 0.95)");
-      ctx.fillStyle = bottomGrad;
-      ctx.fillRect(0, height - 180, width, 180);
-
-      ctx.restore();
-
-      rafIdRef.current = requestAnimationFrame(render);
-    };
-
-    rafIdRef.current = requestAnimationFrame(render);
-
-    return () => {
-      running = false;
-      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
-    };
   }, []);
 
   const scrollToProducts = () => {
@@ -353,19 +142,66 @@ export default function HeroCanvasSequence() {
 
   const currentLook = HERO_LOOKS[activeLookIndex] || HERO_LOOKS[0];
 
+  // Continuous image blend calculation
+  const totalSegments = HERO_LOOKS.length - 1;
+  const scaledProgress = scrollProgress * totalSegments;
+  const fromIndex = Math.min(totalSegments, Math.floor(scaledProgress));
+  const toIndex = Math.min(totalSegments, fromIndex + 1);
+  const blend = scaledProgress - fromIndex; // 0.0 -> 1.0
+
   return (
     <section
       ref={containerRef}
       className="relative w-full bg-black text-white"
-      style={{ height: "420vh" }}
+      style={{ height: "400vh" }}
     >
-      {/* Sticky full-screen stage with hardware acceleration */}
-      <div className="sticky top-0 left-0 w-full h-screen overflow-hidden select-none gpu-accel">
-        {/* Cinematic WebGL / Canvas Sequence Engine */}
-        <canvas
-          ref={canvasRef}
-          className="absolute inset-0 w-full h-full object-cover block"
-        />
+      {/* Sticky full-screen stage */}
+      <div className="sticky top-0 left-0 w-full h-screen overflow-hidden select-none bg-black">
+        {/* Layered Hardware-Accelerated Image Sequence */}
+        <div className="absolute inset-0 w-full h-full">
+          {HERO_LOOKS.map((look, idx) => {
+            // Compute layer opacity based on scroll segment
+            let opacity = 0;
+            if (idx === fromIndex) {
+              opacity = 1 - (fromIndex === toIndex ? 0 : blend);
+            } else if (idx === toIndex) {
+              opacity = blend;
+            }
+
+            // Progressive zoom
+            const scale = 1.0 + (scrollProgress * 0.08);
+
+            return (
+              <div
+                key={`hero-bg-${look.id}`}
+                className="absolute inset-0 w-full h-full transition-opacity duration-150 ease-out"
+                style={{
+                  opacity: opacity,
+                  zIndex: idx === fromIndex ? 1 : idx === toIndex ? 2 : 0,
+                  pointerEvents: "none",
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={look.src}
+                  alt={look.title}
+                  loading={idx <= 1 ? "eager" : "lazy"}
+                  decoding="async"
+                  className="w-full h-full object-cover transition-transform duration-300 ease-out"
+                  style={{
+                    objectPosition: look.focalY,
+                    transform: `scale(${scale})`,
+                    willChange: "transform, opacity",
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Cinematic Vignette & Atmospheric Contrast Gradients */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-black/75 pointer-events-none z-10" />
+        <div className="absolute inset-0 bg-radial-[circle_at_center,_transparent_20%,_rgba(0,0,0,0.7)_90%] pointer-events-none z-10" />
 
         {/* Subtle high-fashion film grain */}
         <div className="absolute inset-0 pointer-events-none grain-overlay z-10" />
@@ -387,7 +223,7 @@ export default function HeroCanvasSequence() {
             const isActive = activeLookIndex === idx;
             return (
               <div
-                key={look.id}
+                key={`pill-${look.id}`}
                 className={`transition-all duration-300 ${
                   isActive
                     ? "w-8 sm:w-10 h-1.5 bg-white"
