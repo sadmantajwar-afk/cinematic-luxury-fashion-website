@@ -50,6 +50,7 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
   };
 
   return (
+    <>
     <motion.header
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -218,6 +219,7 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
           </button>
         </div>
       </div>
+    </motion.header>
 
       {/* Mobile Drawer Menu with AnimatePresence */}
       <AnimatePresence>
@@ -272,6 +274,6 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.header>
+    </>
   );
 }

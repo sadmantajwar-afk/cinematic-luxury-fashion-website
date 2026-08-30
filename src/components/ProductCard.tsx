@@ -106,13 +106,11 @@ export default function ProductCard({ product, onSelect }: ProductCardProps) {
         {/* Subtle Vignette & Grain */}
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/80 via-transparent to-black/20" />
 
-        {/* Quick Add Size Bar (Reveals on Hover) */}
+        {/* Quick Add Size Bar (Always visible on mobile, reveals on hover on desktop) */}
         <div
           onClick={(e) => e.stopPropagation()}
-          className={`absolute bottom-0 left-0 w-full p-3.5 bg-black/90 backdrop-blur-md border-t border-neutral-800 transition-all duration-300 flex flex-col gap-2 ${
-            isHovered
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-2 pointer-events-none"
+          className={`absolute bottom-0 left-0 w-full p-3.5 bg-black/90 backdrop-blur-md border-t border-neutral-800 transition-all duration-300 flex flex-col gap-2 opacity-100 translate-y-0 lg:opacity-0 lg:translate-y-2 lg:pointer-events-none ${
+            isHovered ? "lg:opacity-100 lg:translate-y-0 lg:pointer-events-auto" : ""
           }`}
         >
           <div className="flex items-center justify-between text-[10px] sm:text-xs font-mono uppercase tracking-[0.2em] text-neutral-300 font-bold">
@@ -158,11 +156,9 @@ export default function ProductCard({ product, onSelect }: ProductCardProps) {
 
         <div className="mt-4 pt-3 border-t border-neutral-900 flex items-center justify-between">
           <span className="text-sm sm:text-base font-mono font-bold text-white">
-            {product.currency === "BDT"
-              ? `৳${product.price.toLocaleString()} BDT`
-              : `$${product.price.toLocaleString()} ${product.currency}`}
+            ৳{product.price.toLocaleString()} BDT
           </span>
-          <span className="text-xs font-mono uppercase tracking-widest text-neutral-400 group-hover:text-white transition-colors font-bold">
+          <span className="text-xs font-mono uppercase tracking-widest text-neutral-400 group-hover:text-white transition-colors font-bold hidden sm:inline">
             EXPLORE →
           </span>
         </div>

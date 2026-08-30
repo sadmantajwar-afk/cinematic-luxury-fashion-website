@@ -273,7 +273,7 @@ export default function CartDrawer() {
                     )}
                     <div className="flex justify-between text-white font-bold pt-2 border-t border-neutral-800">
                       <span>FINAL TOTAL</span>
-                      <span>${finalTotal.toLocaleString()} USD</span>
+                      <span>৳{finalTotal.toLocaleString()} BDT</span>
                     </div>
                   </div>
 
@@ -292,7 +292,7 @@ export default function CartDrawer() {
                       disabled={isSubmittingOrder}
                       className="w-2/3 py-3 bg-white text-black text-xs font-bold font-mono uppercase tracking-widest hover:bg-neutral-200 disabled:opacity-50 cursor-pointer"
                     >
-                      {isSubmittingOrder ? "CONFIRMING..." : `PLACE ORDER ($${finalTotal.toLocaleString()})`}
+                      {isSubmittingOrder ? "CONFIRMING..." : `PLACE ORDER (৳${finalTotal.toLocaleString()})`}
                     </motion.button>
                   </div>
                 </motion.form>
@@ -368,9 +368,7 @@ export default function CartDrawer() {
                         {/* Price and quantity controls */}
                         <div className="flex items-center justify-between pt-2">
                           <span className="text-xs font-mono font-bold text-white">
-                            {item.currency === "BDT"
-                              ? `৳${(item.price * item.quantity).toLocaleString()} BDT`
-                              : `$${(item.price * item.quantity).toLocaleString()} ${item.currency}`}
+                            ৳{(item.price * item.quantity).toLocaleString()} BDT
                           </span>
 
                           <div className="flex items-center border border-neutral-800">
@@ -431,21 +429,21 @@ export default function CartDrawer() {
               <div className="space-y-1.5 pt-2 text-xs font-mono">
                 <div className="flex justify-between text-neutral-400">
                   <span>SUBTOTAL</span>
-                  <span>{cart[0]?.currency === "BDT" ? `৳${cartTotal.toLocaleString()} BDT` : `$${cartTotal.toLocaleString()} USD`}</span>
+                  <span>৳{cartTotal.toLocaleString()} BDT</span>
                 </div>
                 {discountPercent > 0 && (
                   <div className="flex justify-between text-neutral-300">
                     <span>VOUCHER DISCOUNT</span>
-                    <span>{cart[0]?.currency === "BDT" ? `-৳${discountAmount.toLocaleString()} BDT` : `-$${discountAmount.toLocaleString()} USD`}</span>
+                    <span>-৳{discountAmount.toLocaleString()} BDT</span>
                   </div>
                 )}
                 <div className="flex justify-between text-neutral-400">
                   <span>SHIPPING</span>
-                  <span>{remainingForFreeShipping === 0 ? "FREE" : (cart[0]?.currency === "BDT" ? "৳120 BDT" : "$35 USD")}</span>
+                  <span>{remainingForFreeShipping === 0 ? "FREE" : "৳120 BDT"}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold text-white pt-2 border-t border-neutral-900">
                   <span>TOTAL</span>
-                  <span>{cart[0]?.currency === "BDT" ? `৳${finalTotal.toLocaleString()} BDT` : `$${finalTotal.toLocaleString()} USD`}</span>
+                  <span>৳{finalTotal.toLocaleString()} BDT</span>
                 </div>
               </div>
 

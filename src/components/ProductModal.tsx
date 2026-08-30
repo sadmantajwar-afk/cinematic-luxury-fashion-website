@@ -148,14 +148,12 @@ export default function ProductModal() {
                 {product.name}
               </h2>
 
-              <div className="mt-3 flex items-center justify-between pb-4 border-b border-neutral-900">
-                <span className="text-xl md:text-2xl font-mono font-bold text-white">
-                  {product.currency === "BDT"
-                    ? `৳${product.price.toLocaleString()} BDT`
-                    : `$${product.price.toLocaleString()} ${product.currency}`}
+              <div className="mt-3 flex flex-col">
+                <span className="text-xl sm:text-2xl font-mono font-bold text-white tracking-tight">
+                  ৳{product.price.toLocaleString()} BDT
                 </span>
-                <span className="text-xs font-mono uppercase tracking-widest text-neutral-400">
-                  COLOR: <strong className="text-white">{product.color}</strong>
+                <span className="text-xs text-neutral-400 font-mono uppercase tracking-widest mt-1">
+                  TAXES INCLUDED. FREE DOMESTIC SHIPPING.
                 </span>
               </div>
 
@@ -384,7 +382,7 @@ export default function ProductModal() {
                     <>
                       <span>ADD TO BAG</span>
                       <span>•</span>
-                      <span className="font-mono">${(product.price * quantity).toLocaleString()}</span>
+                      <span className="font-mono">৳{(product.price * quantity).toLocaleString()}</span>
                     </>
                   )}
                 </motion.button>

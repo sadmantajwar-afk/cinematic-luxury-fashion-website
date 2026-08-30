@@ -12,7 +12,7 @@ const HERO_SECTIONS = [
     collection: "OVERFLOW OF WARMTH ’25 // LUXURY MINIMALISM",
     content: (
       <div className="flex flex-col justify-between h-full p-5 sm:p-10 md:p-14">
-        <div className="mt-12 sm:mt-14 flex items-center justify-between">
+        <div className="mt-28 sm:mt-14 flex items-center justify-between">
           <span className="px-3 py-1 sm:px-3.5 sm:py-1.5 bg-emerald-950/90 border border-emerald-700 text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.25em] uppercase text-emerald-300 font-mono font-bold backdrop-blur-md">
             O/W &rsquo;25 // OVERFLOW OF WARMTH
           </span>
