@@ -189,7 +189,7 @@ export default function CampaignDeepDive() {
         {/* Hotspot 1: High Collar & Shoulder */}
         <div
           ref={d1Ref}
-          className="absolute top-[60%] sm:top-[28%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 sm:max-w-sm ml-auto"
+          className="absolute bottom-8 sm:bottom-auto sm:top-[28%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 sm:max-w-sm ml-auto"
           style={{ opacity: 0, pointerEvents: "none" }}
         >
           <div className="p-5 sm:p-6 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
@@ -212,7 +212,7 @@ export default function CampaignDeepDive() {
         {/* Hotspot 2: Wool Gabardine Torso */}
         <div
           ref={d2Ref}
-          className="absolute top-[60%] sm:top-[46%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 sm:max-w-sm ml-auto"
+          className="absolute bottom-8 sm:bottom-auto sm:top-[46%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 sm:max-w-sm ml-auto"
           style={{ opacity: 0, pointerEvents: "none" }}
         >
           <div className="p-5 sm:p-6 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
@@ -235,7 +235,7 @@ export default function CampaignDeepDive() {
         {/* Hotspot 3: Sleeves & Raw Hem */}
         <div
           ref={d3Ref}
-          className="absolute top-[60%] sm:top-[60%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 sm:max-w-sm ml-auto"
+          className="absolute bottom-8 sm:bottom-auto sm:top-[60%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 sm:max-w-sm ml-auto"
           style={{ opacity: 0, pointerEvents: "none" }}
         >
           <div className="p-5 sm:p-6 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
