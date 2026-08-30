@@ -151,7 +151,7 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
             whileTap={{ scale: 0.95 }}
             onClick={openSearch}
             aria-label="Search archive"
-            className="p-2 text-neutral-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
+            className="hidden sm:flex p-2 text-neutral-300 hover:text-white transition-colors cursor-pointer items-center gap-1.5"
           >
             <Search size={16} />
             <span className="text-[11px] font-mono tracking-wider hidden md:inline">
@@ -165,7 +165,7 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
             whileTap={{ scale: 0.95 }}
             onClick={onOpenAccount}
             aria-label="Atelier Client Portal"
-            className="p-2 text-neutral-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1.5"
+            className="hidden sm:flex p-2 text-neutral-300 hover:text-white transition-colors cursor-pointer items-center gap-1.5"
           >
             <User size={16} />
             <span className="text-[11px] font-mono tracking-wider hidden md:inline">
@@ -179,7 +179,7 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
             whileTap={{ scale: 0.95 }}
             onClick={openWishlist}
             aria-label="Saved items"
-            className="p-2 text-neutral-300 hover:text-white transition-colors cursor-pointer relative flex items-center gap-1.5"
+            className="hidden sm:flex p-2 text-neutral-300 hover:text-white transition-colors cursor-pointer relative items-center gap-1.5"
           >
             <Heart size={16} />
             <span className="text-[11px] font-mono tracking-wider hidden md:inline">

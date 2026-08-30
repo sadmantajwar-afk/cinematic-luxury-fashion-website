@@ -205,7 +205,7 @@ export default function HeroCanvasSequence() {
     <section
       ref={containerRef}
       className="relative w-full bg-black text-white"
-      style={{ height: "400vh" }}
+      style={{ height: "800vh" }}
     >
       <div className="sticky top-0 left-0 w-full h-screen overflow-hidden select-none bg-black">
         <div className="absolute inset-0 w-full h-full">

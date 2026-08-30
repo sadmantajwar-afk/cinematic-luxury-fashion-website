@@ -141,7 +141,7 @@ export default function CampaignDeepDive() {
       id="campaign-section"
       ref={containerRef}
       className="relative w-full bg-black text-white"
-      style={{ height: "260vh" }}
+      style={{ height: "500vh" }}
     >
       <div className="sticky top-0 left-0 w-full h-screen overflow-hidden select-none bg-black">
         <div className="absolute inset-0 w-full h-full">
