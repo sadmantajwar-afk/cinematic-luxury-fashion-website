@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
 const CAMPAIGN_SHOTS = [
@@ -25,51 +25,36 @@ const CAMPAIGN_SHOTS = [
 
 export default function CampaignDeepDive() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
 
-  // Track scroll inside campaign container
-  useEffect(() => {
-    let ticking = false;
+  const scale = useTransform(scrollYProgress, [0, 1], [1.0, 1.06]);
+  
+  const detail1Visible = useTransform(scrollYProgress, (v) => v >= 0.10 && v <= 0.42);
+  const detail2Visible = useTransform(scrollYProgress, (v) => v >= 0.38 && v <= 0.70);
+  const detail3Visible = useTransform(scrollYProgress, (v) => v >= 0.65 && v <= 0.98);
 
-    const handleScroll = () => {
-      if (!containerRef.current) return;
+  // Since we cannot use AnimatePresence effectively when visibility is a MotionValue boolean,
+  // we can map opacity directly instead of using conditional rendering.
+  const d1Opacity = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [0, 1, 1, 0]);
+  const d1Y = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [20, 0, 0, -20]);
+  const d1Scale = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [0.95, 1, 1, 0.95]);
+  const d1Pointer = useTransform(d1Opacity, (v) => v > 0.1 ? "auto" : "none");
 
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          if (!containerRef.current) return;
-          const rect = containerRef.current.getBoundingClientRect();
-          const containerHeight = containerRef.current.offsetHeight;
-          const windowHeight = window.innerHeight;
+  const d2Opacity = useTransform(scrollYProgress, [0.36, 0.40, 0.68, 0.72], [0, 1, 1, 0]);
+  const d2Y = useTransform(scrollYProgress, [0.36, 0.40, 0.68, 0.72], [20, 0, 0, -20]);
+  const d2Scale = useTransform(scrollYProgress, [0.36, 0.40, 0.68, 0.72], [0.95, 1, 1, 0.95]);
+  const d2Pointer = useTransform(d2Opacity, (v) => v > 0.1 ? "auto" : "none");
 
-          const totalScrollable = containerHeight - windowHeight;
-          if (totalScrollable <= 0) return;
+  const d3Opacity = useTransform(scrollYProgress, [0.63, 0.67, 0.96, 1.00], [0, 1, 1, 0]);
+  const d3Y = useTransform(scrollYProgress, [0.63, 0.67, 0.96, 1.00], [20, 0, 0, -20]);
+  const d3Scale = useTransform(scrollYProgress, [0.63, 0.67, 0.96, 1.00], [0.95, 1, 1, 0.95]);
+  const d3Pointer = useTransform(d3Opacity, (v) => v > 0.1 ? "auto" : "none");
 
-          const currentScroll = Math.max(0, -rect.top);
-          const progress = Math.min(1, Math.max(0, currentScroll / totalScrollable));
-          setScrollProgress(progress);
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // Multi-shot crossfade index calculation
-  const totalShots = CAMPAIGN_SHOTS.length - 1;
-  const scaled = scrollProgress * totalShots;
-  const fromIdx = Math.min(totalShots, Math.floor(scaled));
-  const toIdx = Math.min(totalShots, fromIdx + 1);
-  const blend = scaled - fromIdx;
-
-  // Progressive detail triggers
-  const detail1Visible = scrollProgress >= 0.10 && scrollProgress <= 0.42;
-  const detail2Visible = scrollProgress >= 0.38 && scrollProgress <= 0.70;
-  const detail3Visible = scrollProgress >= 0.65 && scrollProgress <= 0.98;
+  const progressPercentText = useTransform(scrollYProgress, (v) => `PROGRESS: ${Math.round(v * 100)}%`);
 
   return (
     <section
@@ -78,69 +63,63 @@ export default function CampaignDeepDive() {
       className="relative w-full bg-black text-white"
       style={{ height: "260vh" }}
     >
-      {/* Pinned full-screen container with hardware acceleration */}
       <div className="sticky top-0 left-0 w-full h-screen overflow-hidden select-none bg-black">
-        {/* Layered Hardware-Accelerated Campaign Image Shots */}
         <div className="absolute inset-0 w-full h-full">
           {CAMPAIGN_SHOTS.map((shot, idx) => {
-            let opacity = 0;
-            if (idx === fromIdx) {
-              opacity = 1 - (fromIdx === toIdx ? 0 : blend);
-            } else if (idx === toIdx) {
-              opacity = blend;
-            }
+            const start = idx / CAMPAIGN_SHOTS.length;
+            const end = (idx + 1) / CAMPAIGN_SHOTS.length;
+            const fadeStart = start - (1 / CAMPAIGN_SHOTS.length);
+            const fadeEnd = start;
 
-            const scale = 1.0 + (scrollProgress * 0.06);
+            const opacity = idx === 0 
+              ? useTransform(scrollYProgress, [end, end + (1 / CAMPAIGN_SHOTS.length)], [1, 0])
+              : useTransform(scrollYProgress, [fadeStart, fadeEnd, end, end + (1 / CAMPAIGN_SHOTS.length)], [0, 1, 1, 0]);
+
+            const zIndex = idx === 0 ? 1 : idx + 1;
 
             return (
-              <div
+              <motion.div
                 key={`campaign-shot-${idx}`}
-                className="absolute inset-0 w-full h-full transition-opacity duration-150 ease-out"
+                className="absolute inset-0 w-full h-full"
                 style={{
-                  opacity: opacity,
-                  zIndex: idx === fromIdx ? 1 : idx === toIdx ? 2 : 0,
+                  opacity,
+                  zIndex,
                   pointerEvents: "none",
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <motion.img
                   src={shot.src}
                   alt={shot.title}
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-full object-cover transition-transform duration-300 ease-out"
+                  className="w-full h-full object-cover"
                   style={{
-                    transform: `scale(${scale})`,
+                    scale,
                     willChange: "transform, opacity",
                   }}
                 />
-              </div>
+              </motion.div>
             );
           })}
         </div>
 
-        {/* Dark Editorial Overlay Gradient */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-black/75 pointer-events-none z-10" />
-
-        {/* Grain overlay */}
         <div className="absolute inset-0 pointer-events-none grain-overlay z-10" />
 
-        {/* Top HUD */}
         <div className="absolute top-5 sm:top-6 left-4 sm:left-12 z-20 flex items-center gap-3 text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.25em] uppercase font-mono text-neutral-400">
           <span className="px-2 py-0.5 border border-neutral-700 bg-black/60 text-white font-medium">
             CAMPAIGN 01
           </span>
           <span className="hidden sm:inline">ANATOMICAL STUDY</span>
-          <span>PROGRESS: {Math.round(scrollProgress * 100)}%</span>
+          <motion.span>{progressPercentText}</motion.span>
         </div>
 
-        {/* Top-Right Badge */}
         <div className="absolute top-5 sm:top-6 right-4 sm:right-12 z-20 flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-[0.15em] text-white">
           <span className="w-2 h-2 rounded-full bg-white animate-ping" />
           <span className="hidden sm:inline">INSPECTION ACTIVE</span>
         </div>
 
-        {/* Left Side Static Title Overlay */}
         <div className="absolute top-1/4 left-5 sm:left-12 md:left-14 z-20 max-w-xs sm:max-w-sm pointer-events-none">
           <div className="text-[9px] sm:text-[10px] uppercase font-mono tracking-[0.25em] text-neutral-400 mb-2 flex items-center gap-1.5">
             <Sparkles size={12} className="text-emerald-400" />
@@ -154,94 +133,72 @@ export default function CampaignDeepDive() {
           </p>
         </div>
 
-        {/* Progressive Garment Hotspots & Detail Cards */}
-        <AnimatePresence>
-          {/* Hotspot 1: High Collar & Shoulder */}
-          {detail1Visible && (
-            <motion.div
-              key="deepdive-hotspot-collar"
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="absolute top-[28%] sm:top-[28%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
-            >
-              <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
-                <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
-                  <span className="text-white font-bold">01 // STRUCTURED COLLAR</span>
-                  <span>POINT 1A</span>
-                </div>
-                <h4 className="text-xs sm:text-sm font-bold tracking-tight uppercase text-white">
-                  Floating Horsehair Interlining
-                </h4>
-                <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-neutral-300 font-light leading-relaxed">
-                  Traditional full-floating canvas gives the collar architectural stiffness without synthetic rigidity. Memory shape that molds to client posture over decades.
-                </p>
-                <div className="mt-2.5 pt-2 border-t border-neutral-800 text-[9px] font-mono uppercase tracking-[0.15em] text-neutral-400">
-                  SPEC: 100% UNBLEACHED HORSEHAIR • HAND-STITCHED
-                </div>
-              </div>
-            </motion.div>
-          )}
+        {/* Hotspot 1: High Collar & Shoulder */}
+        <motion.div
+          className="absolute top-[28%] sm:top-[28%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
+          style={{ opacity: d1Opacity, y: d1Y, scale: d1Scale, pointerEvents: d1Pointer as any }}
+        >
+          <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
+            <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
+              <span className="text-white font-bold">01 // STRUCTURED COLLAR</span>
+              <span>POINT 1A</span>
+            </div>
+            <h4 className="text-xs sm:text-sm font-bold tracking-tight uppercase text-white">
+              Floating Horsehair Interlining
+            </h4>
+            <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-neutral-300 font-light leading-relaxed">
+              Traditional full-floating canvas gives the collar architectural stiffness without synthetic rigidity. Memory shape that molds to client posture over decades.
+            </p>
+            <div className="mt-2.5 pt-2 border-t border-neutral-800 text-[9px] font-mono uppercase tracking-[0.15em] text-neutral-400">
+              SPEC: 100% UNBLEACHED HORSEHAIR • HAND-STITCHED
+            </div>
+          </div>
+        </motion.div>
 
-          {/* Hotspot 2: Wool Gabardine Torso */}
-          {detail2Visible && (
-            <motion.div
-              key="deepdive-hotspot-torso"
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="absolute top-[42%] sm:top-[46%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
-            >
-              <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
-                <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
-                  <span className="text-white font-bold">02 // TEXTURE & DYE</span>
-                  <span>640 GSM</span>
-                </div>
-                <h4 className="text-xs sm:text-sm font-bold tracking-tight uppercase text-white">
-                  Ultra-Dense Pure Wool Gabardine
-                </h4>
-                <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-neutral-300 font-light leading-relaxed">
-                  Engineered with heavy structural drape. The deep obsidian dye absorbs light completely, emphasizing the silhouette&apos;s clean exterior architecture.
-                </p>
-                <div className="mt-2.5 pt-2 border-t border-neutral-800 text-[9px] font-mono uppercase tracking-[0.15em] text-neutral-400">
-                  TREATMENT: WATER-RESISTANT RAINPROOF FINISH
-                </div>
-              </div>
-            </motion.div>
-          )}
+        {/* Hotspot 2: Wool Gabardine Torso */}
+        <motion.div
+          className="absolute top-[42%] sm:top-[46%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
+          style={{ opacity: d2Opacity, y: d2Y, scale: d2Scale, pointerEvents: d2Pointer as any }}
+        >
+          <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
+            <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
+              <span className="text-white font-bold">02 // TEXTURE & DYE</span>
+              <span>640 GSM</span>
+            </div>
+            <h4 className="text-xs sm:text-sm font-bold tracking-tight uppercase text-white">
+              Ultra-Dense Pure Wool Gabardine
+            </h4>
+            <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-neutral-300 font-light leading-relaxed">
+              Engineered with heavy structural drape. The deep obsidian dye absorbs light completely, emphasizing the silhouette&apos;s clean exterior architecture.
+            </p>
+            <div className="mt-2.5 pt-2 border-t border-neutral-800 text-[9px] font-mono uppercase tracking-[0.15em] text-neutral-400">
+              TREATMENT: WATER-RESISTANT RAINPROOF FINISH
+            </div>
+          </div>
+        </motion.div>
 
-          {/* Hotspot 3: Sleeves & Raw Hem */}
-          {detail3Visible && (
-            <motion.div
-              key="deepdive-hotspot-sleeves"
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="absolute top-[56%] sm:top-[60%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
-            >
-              <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
-                <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
-                  <span className="text-white font-bold">03 // ARTICULATED DRAPE</span>
-                  <span>MOBILITY</span>
-                </div>
-                <h4 className="text-xs sm:text-sm font-bold tracking-tight uppercase text-white">
-                  Underarm Kinetic Gusset
-                </h4>
-                <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-neutral-300 font-light leading-relaxed">
-                  Hidden interior underarm pattern allows full 180° arm elevation without disturbing the clean drape of the front torso panel.
-                </p>
-                <div className="mt-2.5 pt-2 border-t border-neutral-800 text-[9px] font-mono uppercase tracking-[0.15em] text-neutral-400">
-                  HARDWARE: HORN BUTTONS HAND-CARVED IN DHAKA, BD
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Hotspot 3: Sleeves & Raw Hem */}
+        <motion.div
+          className="absolute top-[56%] sm:top-[60%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
+          style={{ opacity: d3Opacity, y: d3Y, scale: d3Scale, pointerEvents: d3Pointer as any }}
+        >
+          <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
+            <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
+              <span className="text-white font-bold">03 // ARTICULATED DRAPE</span>
+              <span>MOBILITY</span>
+            </div>
+            <h4 className="text-xs sm:text-sm font-bold tracking-tight uppercase text-white">
+              Underarm Kinetic Gusset
+            </h4>
+            <p className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-neutral-300 font-light leading-relaxed">
+              Hidden interior underarm pattern allows full 180° arm elevation without disturbing the clean drape of the front torso panel.
+            </p>
+            <div className="mt-2.5 pt-2 border-t border-neutral-800 text-[9px] font-mono uppercase tracking-[0.15em] text-neutral-400">
+              HARDWARE: HORN BUTTONS HAND-CARVED IN DHAKA, BD
+            </div>
+          </div>
+        </motion.div>
 
-        {/* Scroll cue bottom bar */}
         <div className="absolute bottom-5 left-4 sm:left-12 z-20 flex items-center gap-2.5 text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span>GARMENT DECONSTRUCTION COMPLETE</span>
