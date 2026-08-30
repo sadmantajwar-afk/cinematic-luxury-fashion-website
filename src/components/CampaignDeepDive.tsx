@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
-import { motion, useScroll, useTransform, useMotionValueEvent, MotionValue } from "framer-motion";
+import React, { useRef, useEffect, useState } from "react";
+import { useScroll, useTransform, useMotionValueEvent, MotionValue } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
 const CAMPAIGN_SHOTS = [
@@ -67,7 +67,7 @@ const CampaignShotLayer = ({
       ref={containerRef}
       className="absolute inset-0 w-full h-full"
       style={{
-        opacity: opacityValue.get(),
+        opacity: idx === 0 ? 1 : 0,
         zIndex,
         pointerEvents: "none",
       }}
@@ -81,7 +81,6 @@ const CampaignShotLayer = ({
         decoding="async"
         className="w-full h-full object-cover"
         style={{
-          transform: `scale(${scaleTransform.get()})`,
           willChange: "transform, opacity",
         }}
       />
@@ -111,22 +110,29 @@ export default function CampaignDeepDive() {
   const d3Y = useTransform(scrollYProgress, [0.63, 0.67, 0.96, 1.00], [20, 0, 0, -20]);
   const d3Scale = useTransform(scrollYProgress, [0.63, 0.67, 0.96, 1.00], [0.95, 1, 1, 0.95]);
 
-  const [progressText, setProgressText] = React.useState("PROGRESS: 0%");
+  const [progressText, setProgressText] = useState("PROGRESS: 0%");
   useMotionValueEvent(scrollYProgress, "change", (v) => setProgressText(`PROGRESS: ${Math.round(v * 100)}%`));
 
-  // Fix for pointer events throwing WAAPI TypeError in Safari
   const d1Ref = useRef<HTMLDivElement>(null);
   const d2Ref = useRef<HTMLDivElement>(null);
   const d3Ref = useRef<HTMLDivElement>(null);
 
-  useMotionValueEvent(d1Opacity, "change", (v) => {
-    if (d1Ref.current) d1Ref.current.style.pointerEvents = v > 0.1 ? "auto" : "none";
-  });
-  useMotionValueEvent(d2Opacity, "change", (v) => {
-    if (d2Ref.current) d2Ref.current.style.pointerEvents = v > 0.1 ? "auto" : "none";
-  });
-  useMotionValueEvent(d3Opacity, "change", (v) => {
-    if (d3Ref.current) d3Ref.current.style.pointerEvents = v > 0.1 ? "auto" : "none";
+  useMotionValueEvent(scrollYProgress, "change", () => {
+    if (d1Ref.current) {
+      d1Ref.current.style.opacity = d1Opacity.get().toString();
+      d1Ref.current.style.transform = `translateY(${d1Y.get()}px) scale(${d1Scale.get()})`;
+      d1Ref.current.style.pointerEvents = d1Opacity.get() > 0.1 ? "auto" : "none";
+    }
+    if (d2Ref.current) {
+      d2Ref.current.style.opacity = d2Opacity.get().toString();
+      d2Ref.current.style.transform = `translateY(${d2Y.get()}px) scale(${d2Scale.get()})`;
+      d2Ref.current.style.pointerEvents = d2Opacity.get() > 0.1 ? "auto" : "none";
+    }
+    if (d3Ref.current) {
+      d3Ref.current.style.opacity = d3Opacity.get().toString();
+      d3Ref.current.style.transform = `translateY(${d3Y.get()}px) scale(${d3Scale.get()})`;
+      d3Ref.current.style.pointerEvents = d3Opacity.get() > 0.1 ? "auto" : "none";
+    }
   });
 
   return (
@@ -180,10 +186,10 @@ export default function CampaignDeepDive() {
         </div>
 
         {/* Hotspot 1: High Collar & Shoulder */}
-        <motion.div
+        <div
           ref={d1Ref}
           className="absolute top-[28%] sm:top-[28%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
-          style={{ opacity: d1Opacity, y: d1Y, scale: d1Scale, pointerEvents: "none" }}
+          style={{ opacity: 0, pointerEvents: "none" }}
         >
           <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
             <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
@@ -200,13 +206,13 @@ export default function CampaignDeepDive() {
               SPEC: 100% UNBLEACHED HORSEHAIR • HAND-STITCHED
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Hotspot 2: Wool Gabardine Torso */}
-        <motion.div
+        <div
           ref={d2Ref}
           className="absolute top-[42%] sm:top-[46%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
-          style={{ opacity: d2Opacity, y: d2Y, scale: d2Scale, pointerEvents: "none" }}
+          style={{ opacity: 0, pointerEvents: "none" }}
         >
           <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
             <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
@@ -223,13 +229,13 @@ export default function CampaignDeepDive() {
               TREATMENT: WATER-RESISTANT RAINPROOF FINISH
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Hotspot 3: Sleeves & Raw Hem */}
-        <motion.div
+        <div
           ref={d3Ref}
           className="absolute top-[56%] sm:top-[60%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
-          style={{ opacity: d3Opacity, y: d3Y, scale: d3Scale, pointerEvents: "none" }}
+          style={{ opacity: 0, pointerEvents: "none" }}
         >
           <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
             <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
@@ -246,7 +252,7 @@ export default function CampaignDeepDive() {
               HARDWARE: HORN BUTTONS HAND-CARVED IN DHAKA, BD
             </div>
           </div>
-        </motion.div>
+        </div>
 
         <div className="absolute bottom-5 left-4 sm:left-12 z-20 flex items-center gap-2.5 text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
