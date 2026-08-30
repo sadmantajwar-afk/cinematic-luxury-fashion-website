@@ -204,7 +204,7 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
             className="px-3 py-1.5 bg-white text-black font-mono font-bold text-[11px] uppercase tracking-wider hover:bg-neutral-200 transition-colors cursor-pointer flex items-center gap-2"
           >
             <ShoppingBag size={14} />
-            <span>BAG [{mounted ? cartCount : 0}]</span>
+            <span>SHOP [{mounted ? cartCount : 0}]</span>
           </motion.button>
 
           {/* Mobile Hamburger Toggle */}
