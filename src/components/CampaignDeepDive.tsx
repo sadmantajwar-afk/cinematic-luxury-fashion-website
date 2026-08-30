@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import { useScroll, useTransform, useMotionValueEvent, MotionValue } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
@@ -98,17 +98,18 @@ export default function CampaignDeepDive() {
 
   const scale = useTransform(scrollYProgress, [0, 1], [1.0, 1.06]);
   
-  const d1Opacity = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [0, 1, 1, 0]);
-  const d1Y = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [20, 0, 0, -20]);
-  const d1Scale = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [0.95, 1, 1, 0.95]);
+  // Adjusted scroll timings so they strictly do NOT overlap.
+  const d1Opacity = useTransform(scrollYProgress, [0.08, 0.12, 0.30, 0.34], [0, 1, 1, 0]);
+  const d1Y = useTransform(scrollYProgress,       [0.08, 0.12, 0.30, 0.34], [20, 0, 0, -20]);
+  const d1Scale = useTransform(scrollYProgress,   [0.08, 0.12, 0.30, 0.34], [0.95, 1, 1, 0.95]);
 
-  const d2Opacity = useTransform(scrollYProgress, [0.36, 0.40, 0.68, 0.72], [0, 1, 1, 0]);
-  const d2Y = useTransform(scrollYProgress, [0.36, 0.40, 0.68, 0.72], [20, 0, 0, -20]);
-  const d2Scale = useTransform(scrollYProgress, [0.36, 0.40, 0.68, 0.72], [0.95, 1, 1, 0.95]);
+  const d2Opacity = useTransform(scrollYProgress, [0.38, 0.42, 0.60, 0.64], [0, 1, 1, 0]);
+  const d2Y = useTransform(scrollYProgress,       [0.38, 0.42, 0.60, 0.64], [20, 0, 0, -20]);
+  const d2Scale = useTransform(scrollYProgress,   [0.38, 0.42, 0.60, 0.64], [0.95, 1, 1, 0.95]);
 
-  const d3Opacity = useTransform(scrollYProgress, [0.63, 0.67, 0.96, 1.00], [0, 1, 1, 0]);
-  const d3Y = useTransform(scrollYProgress, [0.63, 0.67, 0.96, 1.00], [20, 0, 0, -20]);
-  const d3Scale = useTransform(scrollYProgress, [0.63, 0.67, 0.96, 1.00], [0.95, 1, 1, 0.95]);
+  const d3Opacity = useTransform(scrollYProgress, [0.68, 0.72, 0.90, 0.94], [0, 1, 1, 0]);
+  const d3Y = useTransform(scrollYProgress,       [0.68, 0.72, 0.90, 0.94], [20, 0, 0, -20]);
+  const d3Scale = useTransform(scrollYProgress,   [0.68, 0.72, 0.90, 0.94], [0.95, 1, 1, 0.95]);
 
   const [progressText, setProgressText] = useState("PROGRESS: 0%");
   useMotionValueEvent(scrollYProgress, "change", (v) => setProgressText(`PROGRESS: ${Math.round(v * 100)}%`));
