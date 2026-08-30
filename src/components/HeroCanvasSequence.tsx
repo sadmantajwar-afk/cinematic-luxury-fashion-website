@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { motion, useScroll, useTransform, useMotionValueEvent, MotionValue } from "framer-motion";
 import { ArrowDown, CornerRightDown, Sparkles } from "lucide-react";
 
@@ -75,6 +75,9 @@ const HeroShotLayer = ({
   scrollYProgress: MotionValue<number>;
   scaleTransform: MotionValue<number>;
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
   const start = idx / totalShots;
   const end = (idx + 1) / totalShots;
   const fadeStart = start - (1 / totalShots);
@@ -83,19 +86,35 @@ const HeroShotLayer = ({
   const opacityFadeIn = useTransform(scrollYProgress, [fadeStart, fadeEnd, end, end + (1 / totalShots)], [0, 1, 1, 0]);
   const opacityFirst = useTransform(scrollYProgress, [end, end + (1 / totalShots)], [1, 0]);
   
-  const opacity = idx === 0 ? opacityFirst : opacityFadeIn;
+  const opacityValue = idx === 0 ? opacityFirst : opacityFadeIn;
   const zIndex = idx === 0 ? 1 : idx + 1;
 
+  // Manually apply to avoid iOS Safari WAAPI TypeError bugs with motion.div
+  useMotionValueEvent(opacityValue, "change", (latest) => {
+    if (containerRef.current) {
+      containerRef.current.style.opacity = latest.toString();
+    }
+  });
+
+  useMotionValueEvent(scaleTransform, "change", (latest) => {
+    if (imgRef.current) {
+      imgRef.current.style.transform = `scale(${latest})`;
+    }
+  });
+
   return (
-    <motion.div
+    <div
+      ref={containerRef}
       className="absolute inset-0 w-full h-full"
       style={{
-        opacity,
+        opacity: opacityValue.get(),
         zIndex,
         pointerEvents: "none",
       }}
     >
-      <motion.img
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={imgRef}
         src={look.src}
         alt={look.title}
         loading={idx <= 1 ? "eager" : "lazy"}
@@ -103,11 +122,11 @@ const HeroShotLayer = ({
         className="w-full h-full object-cover"
         style={{
           objectPosition: look.focalY,
-          scale: scaleTransform,
+          transform: `scale(${scaleTransform.get()})`,
           willChange: "transform, opacity",
         }}
       />
-    </motion.div>
+    </div>
   );
 };
 

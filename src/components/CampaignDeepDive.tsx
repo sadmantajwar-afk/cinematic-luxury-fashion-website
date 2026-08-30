@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef } from "react";
-import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+import React, { useRef, useEffect } from "react";
+import { motion, useScroll, useTransform, useMotionValueEvent, MotionValue } from "framer-motion";
 import { Sparkles } from "lucide-react";
 
 const CAMPAIGN_SHOTS = [
@@ -28,14 +28,17 @@ const CampaignShotLayer = ({
   idx,
   totalShots,
   scrollYProgress,
-  scale,
+  scaleTransform,
 }: {
   shot: any;
   idx: number;
   totalShots: number;
   scrollYProgress: MotionValue<number>;
-  scale: MotionValue<number>;
+  scaleTransform: MotionValue<number>;
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+
   const start = idx / totalShots;
   const end = (idx + 1) / totalShots;
   const fadeStart = start - (1 / totalShots);
@@ -44,30 +47,45 @@ const CampaignShotLayer = ({
   const opacityFadeIn = useTransform(scrollYProgress, [fadeStart, fadeEnd, end, end + (1 / totalShots)], [0, 1, 1, 0]);
   const opacityFirst = useTransform(scrollYProgress, [end, end + (1 / totalShots)], [1, 0]);
   
-  const opacity = idx === 0 ? opacityFirst : opacityFadeIn;
+  const opacityValue = idx === 0 ? opacityFirst : opacityFadeIn;
   const zIndex = idx === 0 ? 1 : idx + 1;
 
+  useMotionValueEvent(opacityValue, "change", (latest) => {
+    if (containerRef.current) {
+      containerRef.current.style.opacity = latest.toString();
+    }
+  });
+
+  useMotionValueEvent(scaleTransform, "change", (latest) => {
+    if (imgRef.current) {
+      imgRef.current.style.transform = `scale(${latest})`;
+    }
+  });
+
   return (
-    <motion.div
+    <div
+      ref={containerRef}
       className="absolute inset-0 w-full h-full"
       style={{
-        opacity,
+        opacity: opacityValue.get(),
         zIndex,
         pointerEvents: "none",
       }}
     >
-      <motion.img
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        ref={imgRef}
         src={shot.src}
         alt={shot.title}
         loading="lazy"
         decoding="async"
         className="w-full h-full object-cover"
         style={{
-          scale,
+          transform: `scale(${scaleTransform.get()})`,
           willChange: "transform, opacity",
         }}
       />
-    </motion.div>
+    </div>
   );
 };
 
@@ -84,19 +102,32 @@ export default function CampaignDeepDive() {
   const d1Opacity = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [0, 1, 1, 0]);
   const d1Y = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [20, 0, 0, -20]);
   const d1Scale = useTransform(scrollYProgress, [0.08, 0.12, 0.40, 0.44], [0.95, 1, 1, 0.95]);
-  const d1Pointer = useTransform(d1Opacity, (v) => v > 0.1 ? "auto" : "none");
 
   const d2Opacity = useTransform(scrollYProgress, [0.36, 0.40, 0.68, 0.72], [0, 1, 1, 0]);
   const d2Y = useTransform(scrollYProgress, [0.36, 0.40, 0.68, 0.72], [20, 0, 0, -20]);
   const d2Scale = useTransform(scrollYProgress, [0.36, 0.40, 0.68, 0.72], [0.95, 1, 1, 0.95]);
-  const d2Pointer = useTransform(d2Opacity, (v) => v > 0.1 ? "auto" : "none");
 
   const d3Opacity = useTransform(scrollYProgress, [0.63, 0.67, 0.96, 1.00], [0, 1, 1, 0]);
   const d3Y = useTransform(scrollYProgress, [0.63, 0.67, 0.96, 1.00], [20, 0, 0, -20]);
   const d3Scale = useTransform(scrollYProgress, [0.63, 0.67, 0.96, 1.00], [0.95, 1, 1, 0.95]);
-  const d3Pointer = useTransform(d3Opacity, (v) => v > 0.1 ? "auto" : "none");
 
-  const progressPercentText = useTransform(scrollYProgress, (v) => `PROGRESS: ${Math.round(v * 100)}%`);
+  const [progressText, setProgressText] = React.useState("PROGRESS: 0%");
+  useMotionValueEvent(scrollYProgress, "change", (v) => setProgressText(`PROGRESS: ${Math.round(v * 100)}%`));
+
+  // Fix for pointer events throwing WAAPI TypeError in Safari
+  const d1Ref = useRef<HTMLDivElement>(null);
+  const d2Ref = useRef<HTMLDivElement>(null);
+  const d3Ref = useRef<HTMLDivElement>(null);
+
+  useMotionValueEvent(d1Opacity, "change", (v) => {
+    if (d1Ref.current) d1Ref.current.style.pointerEvents = v > 0.1 ? "auto" : "none";
+  });
+  useMotionValueEvent(d2Opacity, "change", (v) => {
+    if (d2Ref.current) d2Ref.current.style.pointerEvents = v > 0.1 ? "auto" : "none";
+  });
+  useMotionValueEvent(d3Opacity, "change", (v) => {
+    if (d3Ref.current) d3Ref.current.style.pointerEvents = v > 0.1 ? "auto" : "none";
+  });
 
   return (
     <section
@@ -114,7 +145,7 @@ export default function CampaignDeepDive() {
               idx={idx}
               totalShots={CAMPAIGN_SHOTS.length}
               scrollYProgress={scrollYProgress}
-              scale={scale}
+              scaleTransform={scale}
             />
           ))}
         </div>
@@ -127,7 +158,7 @@ export default function CampaignDeepDive() {
             CAMPAIGN 01
           </span>
           <span className="hidden sm:inline">ANATOMICAL STUDY</span>
-          <motion.span>{progressPercentText}</motion.span>
+          <span>{progressText}</span>
         </div>
 
         <div className="absolute top-5 sm:top-6 right-4 sm:right-12 z-20 flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-[0.15em] text-white">
@@ -150,8 +181,9 @@ export default function CampaignDeepDive() {
 
         {/* Hotspot 1: High Collar & Shoulder */}
         <motion.div
+          ref={d1Ref}
           className="absolute top-[28%] sm:top-[28%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
-          style={{ opacity: d1Opacity, y: d1Y, scale: d1Scale, pointerEvents: d1Pointer as any }}
+          style={{ opacity: d1Opacity, y: d1Y, scale: d1Scale, pointerEvents: "none" }}
         >
           <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
             <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
@@ -172,8 +204,9 @@ export default function CampaignDeepDive() {
 
         {/* Hotspot 2: Wool Gabardine Torso */}
         <motion.div
+          ref={d2Ref}
           className="absolute top-[42%] sm:top-[46%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
-          style={{ opacity: d2Opacity, y: d2Y, scale: d2Scale, pointerEvents: d2Pointer as any }}
+          style={{ opacity: d2Opacity, y: d2Y, scale: d2Scale, pointerEvents: "none" }}
         >
           <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
             <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
@@ -194,8 +227,9 @@ export default function CampaignDeepDive() {
 
         {/* Hotspot 3: Sleeves & Raw Hem */}
         <motion.div
+          ref={d3Ref}
           className="absolute top-[56%] sm:top-[60%] left-4 right-4 sm:left-auto sm:right-[6%] md:right-[15%] z-20 max-w-sm ml-auto"
-          style={{ opacity: d3Opacity, y: d3Y, scale: d3Scale, pointerEvents: d3Pointer as any }}
+          style={{ opacity: d3Opacity, y: d3Y, scale: d3Scale, pointerEvents: "none" }}
         >
           <div className="p-4 sm:p-5 bg-black/90 backdrop-blur-md border border-neutral-700 text-white shadow-2xl relative">
             <div className="flex items-center justify-between text-[10px] font-mono uppercase text-neutral-400 mb-2">
