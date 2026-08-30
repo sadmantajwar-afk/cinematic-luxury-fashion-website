@@ -209,14 +209,13 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
           </motion.button>
 
           {/* Mobile Hamburger Toggle */}
-          <motion.button
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="lg:hidden p-2 text-neutral-300 hover:text-white cursor-pointer ml-1"
+            className="lg:hidden p-3 -mr-2 text-neutral-300 hover:text-white cursor-pointer select-none touch-manipulation"
             aria-label="Toggle menu"
           >
-            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-          </motion.button>
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
       </div>
 
