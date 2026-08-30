@@ -79,8 +79,6 @@ export default function HeroCanvasSequence() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const [isReady, setIsReady] = useState(false);
-  const [loadedCount, setLoadedCount] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
   const [activeLookIndex, setActiveLookIndex] = useState(0);
 
@@ -93,53 +91,26 @@ export default function HeroCanvasSequence() {
   // Cached dimensions to prevent canvas rebuild on mobile address bar scroll
   const canvasDimensionsRef = useRef({ width: 0, height: 0, dpr: 1 });
 
-  // 1. Preload real high-fashion imagery with async decode
+  // 1. Preload real high-fashion imagery
   useEffect(() => {
     let isMounted = true;
     const loadedImages: HTMLImageElement[] = [];
-    let count = 0;
 
     HERO_LOOKS.forEach((look, idx) => {
       const img = new Image();
-      img.crossOrigin = "anonymous";
       img.decoding = "async";
-
-      img.onload = () => {
-        if (!isMounted) return;
-        count++;
-        setLoadedCount(count);
-        if (count >= 2) {
-          setIsReady(true);
-        }
-      };
-
-      img.onerror = () => {
-        if (!isMounted) return;
-        count++;
-        setLoadedCount(count);
-        if (count >= 1) setIsReady(true);
-      };
-
       img.src = look.src;
       loadedImages[idx] = img;
 
-      // Asynchronous decode for zero main-thread hitching
       if (typeof img.decode === "function") {
-        img.decode().catch(() => {
-          // ignore decode rejection
-        });
+        img.decode().catch(() => {});
       }
     });
 
     imagesRef.current = loadedImages;
 
-    const timeout = setTimeout(() => {
-      if (isMounted) setIsReady(true);
-    }, 400);
-
     return () => {
       isMounted = false;
-      clearTimeout(timeout);
     };
   }, []);
 
@@ -398,22 +369,6 @@ export default function HeroCanvasSequence() {
 
         {/* Subtle high-fashion film grain */}
         <div className="absolute inset-0 pointer-events-none grain-overlay z-10" />
-
-        {/* Loading Indicator */}
-        {!isReady && (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/95 text-white p-6">
-            <div className="text-3xl sm:text-4xl font-black tracking-[-0.05em] mb-4">DREV</div>
-            <div className="w-48 sm:w-52 h-0.5 bg-neutral-800 relative overflow-hidden mb-3">
-              <div
-                className="h-full bg-white transition-all duration-200"
-                style={{ width: `${Math.round((loadedCount / HERO_LOOKS.length) * 100)}%` }}
-              />
-            </div>
-            <div className="text-[10px] uppercase font-mono tracking-[0.25em] text-neutral-400">
-              INITIALIZING ARCHIVE • {Math.round((loadedCount / HERO_LOOKS.length) * 100)}%
-            </div>
-          </div>
-        )}
 
         {/* Micro-HUD top-right live sequence ticker */}
         <div className="absolute top-16 sm:top-20 right-4 sm:right-12 z-20 pointer-events-none flex flex-col items-end text-xs tracking-[0.2em] uppercase font-mono text-neutral-400">
