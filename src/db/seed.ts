@@ -22,7 +22,7 @@ export const initialProducts: Product[] = [
     inStock: true,
     featured: true,
     badge: "OVERFLOW OF WARMTH '25",
-    createdAt: new Date("2026-01-00T00:00:00.000Z"),
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
   },
   {
     id: 14,
@@ -44,7 +44,7 @@ export const initialProducts: Product[] = [
     inStock: true,
     featured: true,
     badge: "NEW CAPSULE ARRIVAL",
-    createdAt: new Date("2026-01-00T00:00:00.000Z"),
+    createdAt: new Date("2026-01-01T00:00:00.000Z"),
   },
   {
     id: 1,

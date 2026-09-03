@@ -25,5 +25,24 @@ export default async function HomePage() {
     }
   }
 
+
+  // Hotfix: Replace broken Pexels images with local fallbacks before passing to client
+  allProducts = allProducts.map((p, i) => {
+    const localImages = [
+      "/products/corduroy_utility_jacket_01.jpg",
+      "/products/corduroy_utility_jacket_02.jpg",
+      "/products/corduroy_utility_jacket_03.jpg",
+      "/products/greenvel_luxe.jpg"
+    ];
+    let p2 = { ...p };
+    if (p2.primaryImage && p2.primaryImage.includes('pexels.com')) {
+      p2.primaryImage = localImages[i % localImages.length];
+    }
+    if (p2.secondaryImage && p2.secondaryImage.includes('pexels.com')) {
+      p2.secondaryImage = localImages[(i + 1) % localImages.length];
+    }
+    return p2;
+  });
+
   return <DrevExperience products={allProducts} />;
 }
