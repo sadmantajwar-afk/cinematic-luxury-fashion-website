@@ -110,7 +110,7 @@ const HERO_SECTIONS = [
   },
   {
     id: "chapter-4",
-    bgSrc: "https://images.pexels.com/photos/18255304/pexels-photo-18255304.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1600&w=1200",
+    bgSrc: "/products/greenvel_luxe.jpg",
     focalY: "center 35%",
     lookTag: "LOOK 03 // OBSIDIAN",
     collection: "RUNWAY EDIT 01 // OBSIDIAN NOIR",

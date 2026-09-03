@@ -29,6 +29,25 @@ export async function GET(request: NextRequest) {
 
     let filtered = [...allProducts];
 
+
+    // Hotfix: Replace broken Pexels images with local fallbacks
+    filtered = filtered.map((p, i) => {
+      const localImages = [
+        "/products/corduroy_utility_jacket_01.jpg",
+        "/products/corduroy_utility_jacket_02.jpg",
+        "/products/corduroy_utility_jacket_03.jpg",
+        "/products/greenvel_luxe.jpg"
+      ];
+      let p2 = { ...p };
+      if (p2.primaryImage && p2.primaryImage.includes('pexels.com')) {
+        p2.primaryImage = localImages[i % localImages.length];
+      }
+      if (p2.secondaryImage && p2.secondaryImage.includes('pexels.com')) {
+        p2.secondaryImage = localImages[(i + 1) % localImages.length];
+      }
+      return p2;
+    });
+
     if (category && category.toLowerCase() !== "all") {
       filtered = filtered.filter(
         (p) => p.category.toLowerCase() === category.toLowerCase()
