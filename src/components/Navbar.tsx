@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, User, Heart, ShoppingBag, Menu, X, Volume2, VolumeX } from "lucide-react";
+import { Search, User, Heart, ShoppingBag, Menu, X } from "lucide-react";
 import { useShop } from "@/context/ShopContext";
 
 interface NavbarProps {
@@ -16,8 +16,6 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
     openWishlist,
     wishlist,
     openSearch,
-    isAudioPlaying,
-    toggleAudio,
   } = useShop();
 
   const [isScrolled, setIsScrolled] = useState(false);
@@ -102,49 +100,8 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
           </nav>
         </div>
 
-        {/* Right Side: Utilities (Sound, Search, Account, Wishlist, Cart) */}
+        {/* Right Side: Utilities (Search, Account, Wishlist, Cart) */}
         <div className="flex items-center gap-3 sm:gap-5">
-          {/* Ambient Sound Toggle with Equalizer bars */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={toggleAudio}
-            className={`hidden sm:flex items-center gap-2 px-2.5 py-1 border transition-colors cursor-pointer text-[10px] font-mono uppercase tracking-wider ${
-              isAudioPlaying
-                ? "border-white bg-white text-black font-bold"
-                : "border-neutral-800 bg-black/60 text-neutral-400 hover:text-white hover:border-neutral-600"
-            }`}
-            title="Toggle runway ambient atmospheric audio"
-          >
-            {isAudioPlaying ? (
-              <>
-                <Volume2 size={12} />
-                <span>SOUND ON</span>
-                <span className="flex gap-0.5 items-end h-2.5">
-                  <motion.span
-                    animate={{ height: ["4px", "10px", "5px", "12px", "4px"] }}
-                    transition={{ repeat: Infinity, duration: 0.8, ease: "easeInOut" }}
-                    className="w-0.5 bg-black"
-                  />
-                  <motion.span
-                    animate={{ height: ["8px", "4px", "12px", "6px", "8px"] }}
-                    transition={{ repeat: Infinity, duration: 0.7, ease: "easeInOut" }}
-                    className="w-0.5 bg-black"
-                  />
-                  <motion.span
-                    animate={{ height: ["5px", "11px", "4px", "9px", "5px"] }}
-                    transition={{ repeat: Infinity, duration: 0.9, ease: "easeInOut" }}
-                    className="w-0.5 bg-black"
-                  />
-                </span>
-              </>
-            ) : (
-              <>
-                <VolumeX size={12} />
-                <span>SOUND</span>
-              </>
-            )}
-          </motion.button>
 
           {/* Search Button */}
           <motion.button
@@ -259,15 +216,8 @@ export default function Navbar({ onOpenAccount }: NavbarProps) {
               </a>
             </nav>
 
-            <div className="space-y-4 pt-6 border-t border-neutral-900 text-xs font-mono">
-              <button
-                onClick={toggleAudio}
-                className="flex items-center gap-2 text-neutral-300 py-2 w-full text-left cursor-pointer"
-              >
-                {isAudioPlaying ? <Volume2 size={16} /> : <VolumeX size={16} />}
-                <span>{isAudioPlaying ? "MUTE AMBIENT SOUND" : "ACTIVATE AMBIENT SOUND"}</span>
-              </button>
-              <div className="text-[10px] text-neutral-500 uppercase tracking-widest pt-4">
+            <div className="pt-6 border-t border-neutral-900 text-xs font-mono">
+              <div className="text-[10px] text-neutral-500 uppercase tracking-widest">
                 DHAKA, BD • PARIS • MILAN • NEW YORK
               </div>
             </div>

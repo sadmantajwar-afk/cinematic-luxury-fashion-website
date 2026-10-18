@@ -45,19 +45,9 @@ interface ShopContextType {
   isSearchOpen: boolean;
   openSearch: () => void;
   closeSearch: () => void;
-
-  // Ambient sound
-  isAudioPlaying: boolean;
-  toggleAudio: () => void;
 }
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
-
-// Web Audio synthesizer for ambient luxury fashion show rumble
-let audioCtx: AudioContext | null = null;
-let gainNode: GainNode | null = null;
-let osc1: OscillatorNode | null = null;
-let osc2: OscillatorNode | null = null;
 
 export function ShopProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -86,7 +76,6 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   // Save cart
   useEffect(() => {
@@ -173,68 +162,6 @@ export function ShopProvider({ children }: { children: ReactNode }) {
     return wishlist.some((p) => p.id === productId);
   };
 
-  // Ambient sound synthesis using Web Audio API
-  const toggleAudio = () => {
-    try {
-      if (!isAudioPlaying) {
-        const AudioContextClass =
-          window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        if (!AudioContextClass) return;
-
-        if (!audioCtx) {
-          audioCtx = new AudioContextClass();
-        }
-        if (audioCtx.state === "suspended") {
-          audioCtx.resume();
-        }
-
-        gainNode = audioCtx.createGain();
-        gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.12, audioCtx.currentTime + 3);
-
-        // Low frequency runway drone 55Hz (A1)
-        osc1 = audioCtx.createOscillator();
-        osc1.type = "sawtooth";
-        osc1.frequency.setValueAtTime(55, audioCtx.currentTime);
-
-        // Sub harmonic 110Hz (A2) with low pass filter
-        const filter = audioCtx.createBiquadFilter();
-        filter.type = "lowpass";
-        filter.frequency.setValueAtTime(220, audioCtx.currentTime);
-
-        osc2 = audioCtx.createOscillator();
-        osc2.type = "sine";
-        osc2.frequency.setValueAtTime(82.4, audioCtx.currentTime); // E2
-
-        osc1.connect(filter);
-        osc2.connect(filter);
-        filter.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-
-        osc1.start();
-        osc2.start();
-        setIsAudioPlaying(true);
-      } else {
-        if (gainNode && audioCtx) {
-          gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
-          setTimeout(() => {
-            try {
-              osc1?.stop();
-              osc2?.stop();
-              osc1?.disconnect();
-              osc2?.disconnect();
-            } catch {}
-          }, 1000);
-        }
-        setIsAudioPlaying(false);
-      }
-    } catch (e) {
-      console.warn("Audio error:", e);
-      setIsAudioPlaying(false);
-    }
-  };
-
   return (
     <ShopContext.Provider
       value={{
@@ -263,9 +190,6 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         isSearchOpen,
         openSearch: () => setIsSearchOpen(true),
         closeSearch: () => setIsSearchOpen(false),
-
-        isAudioPlaying,
-        toggleAudio,
       }}
     >
       {children}
