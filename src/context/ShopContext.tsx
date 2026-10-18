@@ -45,6 +45,11 @@ interface ShopContextType {
   isSearchOpen: boolean;
   openSearch: () => void;
   closeSearch: () => void;
+
+  // Theme (Dark / Light mode)
+  theme: "dark" | "light";
+  toggleTheme: () => void;
+  setTheme: (theme: "dark" | "light") => void;
 }
 
 const ShopContext = createContext<ShopContextType | undefined>(undefined);
@@ -76,6 +81,44 @@ export function ShopProvider({ children }: { children: ReactNode }) {
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [theme, setThemeState] = useState<"dark" | "light">(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("drev_theme");
+        if (saved === "light" || saved === "dark") return saved;
+      } catch (e) {
+        console.warn("Theme storage error:", e);
+      }
+    }
+    return "dark";
+  });
+
+  // Synchronize document theme class and data attribute
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const root = document.documentElement;
+      if (theme === "light") {
+        root.classList.remove("dark");
+        root.classList.add("light");
+        root.setAttribute("data-theme", "light");
+      } else {
+        root.classList.remove("light");
+        root.classList.add("dark");
+        root.setAttribute("data-theme", "dark");
+      }
+    }
+    try {
+      localStorage.setItem("drev_theme", theme);
+    } catch {}
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setThemeState((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
+  const setTheme = (newTheme: "dark" | "light") => {
+    setThemeState(newTheme);
+  };
 
   // Save cart
   useEffect(() => {
@@ -190,6 +233,10 @@ export function ShopProvider({ children }: { children: ReactNode }) {
         isSearchOpen,
         openSearch: () => setIsSearchOpen(true),
         closeSearch: () => setIsSearchOpen(false),
+
+        theme,
+        toggleTheme,
+        setTheme,
       }}
     >
       {children}

@@ -24,8 +24,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark bg-black text-white">
-      <body className="bg-black text-white antialiased selection:bg-white selection:text-black">
+    <html lang="en" suppressHydrationWarning className="dark">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("drev_theme");if(t==="light"){document.documentElement.classList.add("light");document.documentElement.classList.remove("dark");document.documentElement.setAttribute("data-theme","light");}else{document.documentElement.classList.add("dark");document.documentElement.classList.remove("light");document.documentElement.setAttribute("data-theme","dark");}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="antialiased selection:bg-white selection:text-black">
         {children}
       </body>
     </html>

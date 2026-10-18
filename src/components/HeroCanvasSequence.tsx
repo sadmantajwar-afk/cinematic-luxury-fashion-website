@@ -149,7 +149,7 @@ const HERO_SECTIONS = [
 
 export default function HeroCanvasSequence() {
   return (
-    <div className="w-full bg-black text-white">
+    <div className="w-full bg-black text-white keep-dark">
       {HERO_SECTIONS.map((section, idx) => (
         <section 
           key={section.id}
